@@ -1,0 +1,13 @@
+# Large data files
+*.nii
+*.nii.gz
+*.dcm
+*.zip
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/

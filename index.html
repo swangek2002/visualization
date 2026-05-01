@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Medical Image Viewer — CIVET QC Report</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: #0d1117;
+      color: #e6edf3;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, sans-serif;
+      line-height: 1.6;
+    }
+
+    /* ── Header ── */
+    header {
+      background: #161b22;
+      border-bottom: 1px solid #30363d;
+      padding: 14px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    header h1 {
+      font-size: 1.25rem;
+      font-weight: 600;
+    }
+
+    .tab-bar {
+      display: flex;
+      gap: 4px;
+    }
+
+    .tab-btn {
+      background: transparent;
+      color: #8b949e;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 500;
+    }
+
+    .tab-btn:hover { background: #21262d; color: #e6edf3; }
+    .tab-btn.active { background: #1f6feb; color: #fff; }
+
+    /* ── Tab content ── */
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    /* ── NiiVue Section ── */
+    #niivue-tab {
+      display: flex;
+      flex-direction: column;
+      height: calc(100vh - 52px);
+    }
+
+    .nv-toolbar {
+      background: #161b22;
+      border-bottom: 1px solid #30363d;
+      padding: 8px 16px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .nv-toolbar .separator {
+      width: 1px;
+      height: 24px;
+      background: #30363d;
+      margin: 0 4px;
+    }
+
+    .nv-btn {
+      background: #21262d;
+      color: #e6edf3;
+      border: 1px solid #30363d;
+      padding: 5px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.8rem;
+      white-space: nowrap;
+    }
+
+    .nv-btn:hover { background: #30363d; }
+    .nv-btn.primary { background: #1f6feb; border-color: #1f6feb; }
+    .nv-btn.primary:hover { background: #388bfd; }
+
+    .nv-select {
+      background: #21262d;
+      color: #e6edf3;
+      border: 1px solid #30363d;
+      padding: 5px 8px;
+      border-radius: 6px;
+      font-size: 0.8rem;
+    }
+
+    .nv-label {
+      color: #8b949e;
+      font-size: 0.75rem;
+      white-space: nowrap;
+    }
+
+    .nv-range {
+      width: 80px;
+      accent-color: #1f6feb;
+    }
+
+    .nv-checkbox {
+      accent-color: #1f6feb;
+    }
+
+    .nv-canvas-wrap {
+      flex: 1;
+      position: relative;
+      min-height: 0;
+      background: #000;
+    }
+
+    #gl1 {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .nv-drop-overlay {
+      display: none;
+      position: absolute;
+      inset: 0;
+      background: rgba(31, 111, 235, 0.15);
+      border: 3px dashed #1f6feb;
+      z-index: 10;
+      justify-content: center;
+      align-items: center;
+      font-size: 1.2rem;
+      color: #58a6ff;
+      pointer-events: none;
+    }
+
+    .nv-drop-overlay.active { display: flex; }
+
+    .nv-statusbar {
+      background: #161b22;
+      border-top: 1px solid #30363d;
+      padding: 6px 16px;
+      font-size: 0.78rem;
+      color: #8b949e;
+      font-variant-numeric: tabular-nums;
+      min-height: 32px;
+      display: flex;
+      align-items: center;
+    }
+
+    .nv-loading {
+      position: absolute;
+      inset: 0;
+      display: none;
+      justify-content: center;
+      align-items: center;
+      background: rgba(0, 0, 0, 0.7);
+      z-index: 20;
+      color: #58a6ff;
+      font-size: 1rem;
+    }
+
+    .nv-loading.active { display: flex; }
+
+    /* ── CIVET QC Section ── */
+    #civet-tab main {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 24px 16px 48px;
+    }
+
+    .card {
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 8px;
+      margin-bottom: 24px;
+      overflow: hidden;
+    }
+
+    .card-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid #30363d;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .card-header h2 { font-size: 1.1rem; font-weight: 600; }
+
+    .card-header .badge {
+      background: #1f6feb;
+      color: #fff;
+      font-size: 0.7rem;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-weight: 500;
+    }
+
+    .card-body { padding: 16px 20px; }
+
+    .card-body img {
+      width: 100%;
+      height: auto;
+      display: block;
+      cursor: pointer;
+      border-radius: 4px;
+      transition: opacity 0.2s;
+    }
+
+    .card-body img:hover { opacity: 0.9; }
+
+    .card-body .caption {
+      color: #8b949e;
+      font-size: 0.8rem;
+      margin-top: 8px;
+      text-align: center;
+    }
+
+    .qc-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-top: 16px;
+    }
+
+    .qc-card {
+      background: #0d1117;
+      border: 1px solid #30363d;
+      border-radius: 6px;
+      padding: 16px;
+    }
+
+    .qc-card h3 {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: #58a6ff;
+      margin-bottom: 12px;
+    }
+
+    .qc-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 6px 0;
+      border-bottom: 1px solid #21262d;
+    }
+
+    .qc-item:last-child { border-bottom: none; }
+    .qc-label { color: #8b949e; font-size: 0.85rem; }
+
+    .qc-value {
+      font-weight: 600;
+      font-size: 0.9rem;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .qc-bar {
+      width: 100%;
+      height: 6px;
+      background: #21262d;
+      border-radius: 3px;
+      margin-top: 4px;
+      overflow: hidden;
+    }
+
+    .qc-bar-fill {
+      height: 100%;
+      border-radius: 3px;
+      transition: width 0.6s ease;
+    }
+
+    .summary-toggle {
+      background: #21262d;
+      color: #e6edf3;
+      border: 1px solid #30363d;
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      margin-bottom: 12px;
+    }
+
+    .summary-toggle:hover { background: #30363d; }
+    .summary-content { display: none; }
+    .summary-content.expanded { display: block; }
+
+    /* ── Lightbox ── */
+    .lightbox {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.92);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+      cursor: zoom-out;
+    }
+
+    .lightbox.active { display: flex; }
+
+    .lightbox img {
+      max-width: 95vw;
+      max-height: 95vh;
+      object-fit: contain;
+      border-radius: 4px;
+    }
+
+    .lightbox-close {
+      position: fixed;
+      top: 16px;
+      right: 24px;
+      color: #e6edf3;
+      font-size: 2rem;
+      cursor: pointer;
+      z-index: 1001;
+      background: none;
+      border: none;
+      line-height: 1;
+    }
+
+    .lightbox-close:hover { color: #fff; }
+
+    #fileInput { display: none; }
+
+    @media (max-width: 700px) {
+      header { flex-direction: column; gap: 8px; }
+      .nv-toolbar { padding: 6px 8px; gap: 6px; }
+      .qc-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>Medical Image Viewer</h1>
+    <div class="tab-bar">
+      <button class="tab-btn active" onclick="switchTab('niivue')">3D Viewer (NiiVue)</button>
+      <button class="tab-btn" onclick="switchTab('civet')">CIVET QC Report</button>
+    </div>
+  </header>
+
+  <!-- ═══════════ NiiVue 3D Viewer Tab ═══════════ -->
+  <div id="niivue-tab" class="tab-content active">
+
+    <!-- Toolbar -->
+    <div class="nv-toolbar">
+      <button class="nv-btn primary" onclick="document.getElementById('fileInput').click()">Open Local File</button>
+      <button class="nv-btn" onclick="loadSample()">Load Sample</button>
+      <input type="file" id="fileInput" accept=".nii,.nii.gz,.dcm,.nrrd,.mgh,.mgz,.mif,.trk,.tck,.vtk,.stl,.obj,.gii" multiple>
+
+      <div class="separator"></div>
+
+      <label class="nv-label">Server Path</label>
+      <input type="text" class="nv-select" id="serverPath" placeholder="e.g. data/brain.nii.gz" style="width:200px">
+      <button class="nv-btn" onclick="loadServerFile()">Load</button>
+
+      <div class="separator"></div>
+
+      <label class="nv-label">View</label>
+      <select class="nv-select" id="sliceType">
+        <option value="0">Multiplanar</option>
+        <option value="1">Axial</option>
+        <option value="2">Coronal</option>
+        <option value="3">Sagittal</option>
+        <option value="4">3D Render</option>
+      </select>
+
+      <div class="separator"></div>
+
+      <label class="nv-label">Colormap</label>
+      <select class="nv-select" id="colormapSelect"></select>
+
+      <div class="separator"></div>
+
+      <label class="nv-label">Opacity</label>
+      <input type="range" class="nv-range" id="opacitySlider" min="0" max="1" step="0.05" value="1">
+
+      <div class="separator"></div>
+
+      <label class="nv-label">Drag</label>
+      <select class="nv-select" id="dragMode">
+        <option value="0">None</option>
+        <option value="1" selected>Contrast</option>
+        <option value="2">Measurement</option>
+        <option value="3">Pan / Zoom</option>
+        <option value="4">Slicer 3D</option>
+      </select>
+
+      <div class="separator"></div>
+
+      <label class="nv-label">
+        <input type="checkbox" class="nv-checkbox" id="crosshairCheck" checked> Crosshair
+      </label>
+
+      <label class="nv-label">
+        <input type="checkbox" class="nv-checkbox" id="radioCheck"> Radiological
+      </label>
+
+      <div class="separator"></div>
+
+      <button class="nv-btn" onclick="takeScreenshot()">Screenshot</button>
+      <button class="nv-btn" onclick="resetView()">Reset</button>
+    </div>
+
+    <!-- Canvas -->
+    <div class="nv-canvas-wrap" id="canvasWrap">
+      <canvas id="gl1"></canvas>
+      <div class="nv-drop-overlay" id="dropOverlay">Drop NIfTI / DICOM / Mesh files here</div>
+      <div class="nv-loading" id="loadingOverlay">Loading...</div>
+    </div>
+
+    <!-- Status bar -->
+    <div class="nv-statusbar" id="statusBar">
+      Load a file or click "Load Sample" to get started.
+    </div>
+  </div>
+
+  <!-- ═══════════ CIVET QC Tab ═══════════ -->
+  <div id="civet-tab" class="tab-content">
+    <main>
+      <div class="card">
+        <div class="card-header">
+          <h2>Volume Slices &amp; Tissue Classification</h2>
+          <span class="badge">T1</span>
+        </div>
+        <div class="card-body">
+          <img src="verify/volume_slices.png"
+               alt="Volume slices — T1 (top), Tissue classification (bottom)"
+               loading="lazy" onclick="openLightbox(this)">
+          <p class="caption">Top: T1-weighted MRI (Axial / Coronal / Sagittal) — Bottom: Tissue classification (blue=CSF, green=GM, red=WM)</p>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <h2>White Matter Surface</h2>
+          <span class="badge">Surface</span>
+        </div>
+        <div class="card-body">
+          <img src="verify/surface_renders.png"
+               alt="White matter surface renders" loading="lazy" onclick="openLightbox(this)">
+          <p class="caption">White matter surface: L lateral / L medial / R lateral / R medial / Superior / Anterior</p>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <h2>Cortical Thickness</h2>
+          <span class="badge">Thickness</span>
+        </div>
+        <div class="card-body">
+          <img src="verify/thickness_map.png"
+               alt="Cortical thickness map" loading="lazy" onclick="openLightbox(this)">
+          <p class="caption">Cortical thickness (tlink 30 mm) — Left &amp; Right hemispheres [1.0–5.0 mm]</p>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <h2>QC Statistics</h2>
+          <span class="badge">QC</span>
+        </div>
+        <div class="card-body">
+          <img src="verify/qc_stats.png" alt="QC statistics" loading="lazy" onclick="openLightbox(this)">
+          <div class="qc-grid">
+            <div class="qc-card">
+              <h3>Tissue Classification QC</h3>
+              <div class="qc-item"><span class="qc-label">CSF</span><span class="qc-value" style="color:#58a6ff">12.80%</span></div>
+              <div class="qc-bar"><div class="qc-bar-fill" style="width:12.8%;background:#58a6ff"></div></div>
+              <div class="qc-item"><span class="qc-label">Gray Matter (GM)</span><span class="qc-value" style="color:#3fb950">39.22%</span></div>
+              <div class="qc-bar"><div class="qc-bar-fill" style="width:39.22%;background:#3fb950"></div></div>
+              <div class="qc-item"><span class="qc-label">White Matter (WM)</span><span class="qc-value" style="color:#f85149">45.71%</span></div>
+              <div class="qc-bar"><div class="qc-bar-fill" style="width:45.71%;background:#f85149"></div></div>
+              <div class="qc-item"><span class="qc-label">Subcortical (SC)</span><span class="qc-value" style="color:#d2a8ff">2.27%</span></div>
+              <div class="qc-bar"><div class="qc-bar-fill" style="width:2.27%;background:#d2a8ff"></div></div>
+            </div>
+            <div class="qc-card">
+              <h3>Surface QC</h3>
+              <div class="qc-item"><span class="qc-label">White Surface</span><span class="qc-value" style="color:#f0883e">14.18%</span></div>
+              <div class="qc-bar"><div class="qc-bar-fill" style="width:14.18%;background:#f0883e"></div></div>
+              <div class="qc-item"><span class="qc-label">Gray Surface</span><span class="qc-value" style="color:#e3b341">13.48%</span></div>
+              <div class="qc-bar"><div class="qc-bar-fill" style="width:13.48%;background:#e3b341"></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <h2>Full CIVET Summary</h2>
+          <span class="badge">Summary</span>
+        </div>
+        <div class="card-body">
+          <button class="summary-toggle" onclick="toggleSummary()">Show / Hide Full Summary Image</button>
+          <div class="summary-content" id="summaryContent">
+            <img src="verify/civet_summary_941S6471.png"
+                 alt="CIVET QC summary" loading="lazy" onclick="openLightbox(this)">
+            <p class="caption">Combined CIVET QC summary — Subject 941S6471</p>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Lightbox -->
+  <div class="lightbox" id="lightbox" onclick="closeLightbox()">
+    <button class="lightbox-close" onclick="closeLightbox()">&times;</button>
+    <img id="lightboxImg" src="" alt="Enlarged view">
+  </div>
+
+  <!-- NiiVue UMD from CDN -->
+  <script src="https://unpkg.com/@niivue/niivue@0.44.0/dist/niivue.umd.js"></script>
+
+  <script>
+    /* ── Tab switching ── */
+    function switchTab(name) {
+      document.querySelectorAll('.tab-content').forEach(function(el) { el.classList.remove('active'); });
+      document.querySelectorAll('.tab-btn').forEach(function(el) { el.classList.remove('active'); });
+      document.getElementById(name + '-tab').classList.add('active');
+      event.target.classList.add('active');
+      if (name === 'niivue' && nv) nv.resizeListener();
+    }
+
+    /* ── Lightbox ── */
+    function openLightbox(img) {
+      document.getElementById('lightboxImg').src = img.src;
+      document.getElementById('lightbox').classList.add('active');
+    }
+    function closeLightbox() {
+      document.getElementById('lightbox').classList.remove('active');
+    }
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') closeLightbox();
+    });
+    function toggleSummary() {
+      document.getElementById('summaryContent').classList.toggle('expanded');
+    }
+
+    /* ── NiiVue initialization ── */
+    var nv = null;
+
+    function showLoading(show) {
+      document.getElementById('loadingOverlay').classList.toggle('active', show);
+    }
+
+    function updateStatus(data) {
+      if (data && data.string) {
+        document.getElementById('statusBar').textContent = data.string;
+      }
+    }
+
+    async function initNiiVue() {
+      try {
+      var Niivue = niivue.Niivue;
+      console.log('NiiVue version:', Niivue.version || 'unknown');
+
+      nv = new Niivue({
+        backColor: [0.09, 0.09, 0.14, 1],
+        show3Dcrosshair: true,
+        dragAndDropEnabled: true,
+        onLocationChange: updateStatus
+      });
+
+      await nv.attachToCanvas(document.getElementById('gl1'));
+      nv.setSliceType(nv.sliceTypeMultiplanar);
+      nv.opts.dragMode = 1; // contrast
+      console.log('NiiVue initialized successfully');
+
+      // Populate colormap dropdown
+      var cmaps = nv.colormaps();
+      var sel = document.getElementById('colormapSelect');
+      // Put common ones first
+      var favorites = ['gray', 'viridis', 'plasma', 'inferno', 'hot', 'cool', 'warm', 'bone', 'winter', 'actc'];
+      favorites.forEach(function(name) {
+        if (cmaps.indexOf(name) !== -1) {
+          var opt = document.createElement('option');
+          opt.value = name;
+          opt.textContent = name;
+          sel.appendChild(opt);
+        }
+      });
+      // Separator
+      var sepOpt = document.createElement('option');
+      sepOpt.disabled = true;
+      sepOpt.textContent = '──────────';
+      sel.appendChild(sepOpt);
+      // Rest
+      cmaps.forEach(function(name) {
+        if (favorites.indexOf(name) === -1) {
+          var opt = document.createElement('option');
+          opt.value = name;
+          opt.textContent = name;
+          sel.appendChild(opt);
+        }
+      });
+
+      /* ── Toolbar event listeners ── */
+
+      // View mode
+      document.getElementById('sliceType').addEventListener('change', function() {
+        var modes = [
+          nv.sliceTypeMultiplanar,
+          nv.sliceTypeAxial,
+          nv.sliceTypeCoronal,
+          nv.sliceTypeSagittal,
+          nv.sliceTypeRender
+        ];
+        nv.setSliceType(modes[parseInt(this.value)]);
+      });
+
+      // Colormap
+      document.getElementById('colormapSelect').addEventListener('change', function() {
+        if (nv.volumes.length > 0) {
+          nv.setColormap(nv.volumes[0].id, this.value);
+        }
+      });
+
+      // Opacity
+      document.getElementById('opacitySlider').addEventListener('input', function() {
+        if (nv.volumes.length > 0) {
+          nv.setOpacity(0, parseFloat(this.value));
+        }
+      });
+
+      // Drag mode
+      document.getElementById('dragMode').addEventListener('change', function() {
+        nv.opts.dragMode = parseInt(this.value);
+      });
+
+      // Crosshair
+      document.getElementById('crosshairCheck').addEventListener('change', function() {
+        nv.opts.show3Dcrosshair = this.checked;
+        nv.setCrosshairWidth(this.checked ? 1 : 0);
+      });
+
+      // Radiological convention
+      document.getElementById('radioCheck').addEventListener('change', function() {
+        nv.setRadiologicalConvention(this.checked);
+      });
+
+      // File input — use blob URL approach for reliability
+      document.getElementById('fileInput').addEventListener('change', async function() {
+        if (this.files.length === 0) return;
+        showLoading(true);
+        try {
+          var volumeList = [];
+          for (var i = 0; i < this.files.length; i++) {
+            var f = this.files[i];
+            var blobUrl = URL.createObjectURL(f);
+            console.log('Loading file:', f.name, 'size:', f.size, 'blob:', blobUrl);
+            volumeList.push({ url: blobUrl, name: f.name });
+          }
+          await nv.loadVolumes(volumeList);
+          document.getElementById('statusBar').textContent = 'Loaded: ' + this.files[0].name + (this.files.length > 1 ? ' (+' + (this.files.length - 1) + ' more)' : '');
+        } catch (err) {
+          document.getElementById('statusBar').textContent = 'Error: ' + err.message;
+          console.error('File load error:', err);
+        } finally {
+          showLoading(false);
+          this.value = '';
+        }
+      });
+
+      // Drag-and-drop visual feedback
+      var wrap = document.getElementById('canvasWrap');
+      var overlay = document.getElementById('dropOverlay');
+      wrap.addEventListener('dragover', function(e) {
+        e.preventDefault();
+        overlay.classList.add('active');
+      });
+      wrap.addEventListener('dragleave', function(e) {
+        overlay.classList.remove('active');
+      });
+      wrap.addEventListener('drop', function(e) {
+        overlay.classList.remove('active');
+      });
+
+      } catch (initErr) {
+        console.error('NiiVue init error:', initErr);
+        document.getElementById('statusBar').textContent = 'Error initializing NiiVue: ' + initErr.message;
+      }
+    }
+
+    /* ── Toolbar actions ── */
+    async function loadSample() {
+      if (!nv) return;
+      showLoading(true);
+      try {
+        await nv.loadVolumes([{
+          url: 'https://niivue.github.io/niivue-demo-images/mni152.nii.gz',
+          colormap: 'gray',
+          opacity: 1
+        }]);
+        document.getElementById('statusBar').textContent = 'Loaded sample: MNI152 T1 1mm template';
+      } catch (err) {
+        document.getElementById('statusBar').textContent = 'Error loading sample: ' + err.message;
+        console.error('Sample load error:', err);
+      } finally {
+        showLoading(false);
+      }
+    }
+
+    async function loadServerFile() {
+      if (!nv) return;
+      var path = document.getElementById('serverPath').value.trim();
+      if (!path) {
+        document.getElementById('statusBar').textContent = 'Please enter a file path.';
+        return;
+      }
+      showLoading(true);
+      try {
+        await nv.loadVolumes([{ url: path, colormap: 'gray', opacity: 1 }]);
+        document.getElementById('statusBar').textContent = 'Loaded from server: ' + path;
+      } catch (err) {
+        document.getElementById('statusBar').textContent = 'Error loading server file: ' + err.message;
+        console.error('Server file load error:', err);
+      } finally {
+        showLoading(false);
+      }
+    }
+
+    function takeScreenshot() {
+      if (!nv) return;
+      nv.saveScene('screenshot.png');
+    }
+
+    function resetView() {
+      if (!nv) return;
+      // Reset sliceType to multiplanar
+      nv.setSliceType(nv.sliceTypeMultiplanar);
+      document.getElementById('sliceType').value = '0';
+      // Reset drag mode
+      nv.opts.dragMode = 1;
+      document.getElementById('dragMode').value = '1';
+      // Reset opacity
+      if (nv.volumes.length > 0) {
+        nv.setOpacity(0, 1);
+      }
+      document.getElementById('opacitySlider').value = '1';
+      // Reset crosshair
+      nv.opts.show3Dcrosshair = true;
+      nv.setCrosshairWidth(1);
+      document.getElementById('crosshairCheck').checked = true;
+      // Reset radiological
+      nv.setRadiologicalConvention(false);
+      document.getElementById('radioCheck').checked = false;
+      // Reset colormap
+      if (nv.volumes.length > 0) {
+        nv.setColormap(nv.volumes[0].id, 'gray');
+        document.getElementById('colormapSelect').value = 'gray';
+      }
+    }
+
+    // Enter key triggers server file load
+    document.getElementById('serverPath').addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') loadServerFile();
+    });
+
+    /* ── Init ── */
+    initNiiVue();
+  </script>
+</body>
+</html>
