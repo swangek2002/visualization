@@ -54,10 +54,10 @@
 
     /* ── NiiVue Section ── */
     #niivue-tab {
-      display: flex;
       flex-direction: column;
       height: calc(100vh - 52px);
     }
+    #niivue-tab.active { display: flex; }
 
     .nv-toolbar {
       background: #161b22;
@@ -330,6 +330,173 @@
 
     #fileInput { display: none; }
 
+    /* ── Slicer VNC Tab ── */
+    .slicer-wrap {
+      display: flex;
+      flex-direction: column;
+      height: calc(100vh - 52px);
+      width: 100%;
+    }
+    #slicer-tab.active { display: flex; }
+
+    .vnc-container {
+      flex: 1;
+      min-height: 0;
+      background: #000;
+      position: relative;
+      overflow: hidden;
+    }
+
+    #vncFrame {
+      display: none;
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+
+    .vnc-placeholder {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      color: #8b949e;
+      padding: 40px;
+    }
+
+    .vnc-placeholder h2 {
+      color: #e6edf3;
+      margin-bottom: 8px;
+      font-size: 1.3rem;
+    }
+
+    .vnc-placeholder p {
+      margin-bottom: 24px;
+      text-align: center;
+    }
+
+    .vnc-steps {
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 8px;
+      padding: 20px 24px;
+      max-width: 600px;
+      width: 100%;
+      text-align: left;
+    }
+
+    .vnc-steps h3 {
+      color: #e6edf3;
+      font-size: 0.95rem;
+      margin-bottom: 12px;
+    }
+
+    .vnc-steps ol {
+      padding-left: 20px;
+      line-height: 1.8;
+      font-size: 0.85rem;
+    }
+
+    .vnc-steps pre {
+      background: #0d1117;
+      border: 1px solid #30363d;
+      border-radius: 4px;
+      padding: 8px 12px;
+      margin: 6px 0 12px;
+      font-size: 0.8rem;
+      overflow-x: auto;
+      color: #e6edf3;
+    }
+
+    /* ── Mesh toolbar ── */
+    #meshToolbar {
+      display: none;
+      background: #1c2128;
+      border-bottom: 1px solid #30363d;
+      padding: 6px 16px;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+    }
+
+    #meshToolbar .mesh-label {
+      color: #58a6ff;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+
+    /* ── Loaded files panel ── */
+    .files-panel {
+      display: none;
+      background: #161b22;
+      border-bottom: 1px solid #30363d;
+      padding: 6px 16px;
+      max-height: 120px;
+      overflow-y: auto;
+    }
+
+    .files-panel.active { display: block; }
+
+    .files-panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 4px;
+    }
+
+    .files-panel-header span {
+      color: #8b949e;
+      font-size: 0.72rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .file-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 3px 0;
+      font-size: 0.78rem;
+    }
+
+    .file-item .file-type {
+      font-size: 0.65rem;
+      padding: 1px 6px;
+      border-radius: 4px;
+      font-weight: 600;
+      color: #fff;
+    }
+
+    .file-type-vol { background: #1f6feb; }
+    .file-type-mesh { background: #3fb950; }
+    .file-type-tract { background: #d2a8ff; color: #0d1117 !important; }
+    .file-type-conn { background: #f0883e; }
+
+    .file-item .file-name {
+      color: #e6edf3;
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .file-item .file-remove {
+      background: none;
+      border: none;
+      color: #f85149;
+      cursor: pointer;
+      font-size: 0.8rem;
+      padding: 0 4px;
+      opacity: 0.6;
+    }
+
+    .file-item .file-remove:hover { opacity: 1; }
+
     @media (max-width: 700px) {
       header { flex-direction: column; gap: 8px; }
       .nv-toolbar { padding: 6px 8px; gap: 6px; }
@@ -344,6 +511,7 @@
     <div class="tab-bar">
       <button class="tab-btn active" onclick="switchTab('niivue')">3D Viewer (NiiVue)</button>
       <button class="tab-btn" onclick="switchTab('civet')">CIVET QC Report</button>
+      <button class="tab-btn" onclick="switchTab('slicer')">Remote VNC</button>
     </div>
   </header>
 
@@ -353,14 +521,24 @@
     <!-- Toolbar -->
     <div class="nv-toolbar">
       <button class="nv-btn primary" onclick="document.getElementById('fileInput').click()">Open Local File</button>
-      <button class="nv-btn" onclick="loadSample()">Load Sample</button>
-      <input type="file" id="fileInput" accept=".nii,.nii.gz,.dcm,.nrrd,.mgh,.mgz,.mif,.trk,.tck,.vtk,.stl,.obj,.gii" multiple>
+      <select class="nv-select" id="sampleSelect" onchange="loadSample(this.value)">
+        <option value="">Load Sample...</option>
+        <option value="mni152">MNI152 Volume</option>
+        <option value="mesh">Brain Mesh (L pial)</option>
+        <option value="tract">Fiber Tracts</option>
+        <option value="connectome">Connectome</option>
+      </select>
+      <button class="nv-btn" onclick="document.getElementById('dicomFolderInput').click()">DICOM Folder</button>
+      <input type="file" id="fileInput" accept=".nii,.nii.gz,.dcm,.nrrd,.mgh,.mgz,.mif,.trk,.tck,.trx,.vtk,.stl,.obj,.gii,.pial,.white,.inflated,.smoothwm,.sphere,.orig,.ply,.mz3,.off,.asc,.dfs,.srf,.x3d,.jcon,.json,.hdr,.img,.head,.brik,.mnc,.tt,.tri,.ico,.nv,.geo,.fsm,.tract" multiple>
+      <input type="file" id="dicomFolderInput" webkitdirectory directory multiple style="display:none">
 
       <div class="separator"></div>
 
       <label class="nv-label">Server Path</label>
-      <input type="text" class="nv-select" id="serverPath" placeholder="e.g. data/brain.nii.gz" style="width:200px">
+      <input type="text" class="nv-select" id="serverPath" placeholder="e.g. data/brain.nii.gz or /abs/path" style="width:200px">
       <button class="nv-btn" onclick="loadServerFile()">Load</button>
+      <button class="nv-btn" onclick="document.getElementById('connectomeInput').click()" title="Load .jcon, .node+.edge, or connectome JSON">Connectome</button>
+      <input type="file" id="connectomeInput" accept=".jcon,.json,.node,.edge" multiple style="display:none">
 
       <div class="separator"></div>
 
@@ -410,10 +588,63 @@
       <button class="nv-btn" onclick="resetView()">Reset</button>
     </div>
 
+    <!-- Mesh-specific toolbar (shown when meshes are loaded) -->
+    <div class="nv-toolbar" id="meshToolbar">
+      <span class="mesh-label">MESH</span>
+
+      <label class="nv-label">Shader</label>
+      <select class="nv-select" id="meshShader">
+        <option value="0">Phong</option>
+        <option value="1">Matte</option>
+        <option value="2">Harmonic</option>
+        <option value="3">Hemispheric</option>
+        <option value="4">Edge</option>
+        <option value="5">Diffuse</option>
+        <option value="6">Outline</option>
+        <option value="7">Specular</option>
+        <option value="8">Toon</option>
+        <option value="9">Flat</option>
+        <option value="10">Matcap</option>
+      </select>
+
+      <div class="separator"></div>
+
+      <label class="nv-label">Mesh Opacity</label>
+      <input type="range" class="nv-range" id="meshOpacity" min="0" max="1" step="0.05" value="1">
+
+      <div class="separator"></div>
+
+      <label class="nv-label">Fiber Radius</label>
+      <input type="range" class="nv-range" id="fiberRadius" min="0.5" max="5" step="0.5" value="1" style="width:60px">
+
+      <div class="separator"></div>
+
+      <span id="ciftiFrameControl" style="display:none;align-items:center;gap:6px">
+        <div class="separator"></div>
+        <label class="nv-label">CIFTI Frame</label>
+        <input type="range" class="nv-range" id="ciftiFrame" min="0" max="100" value="0" style="width:100px">
+        <span class="nv-label" id="ciftiFrameLabel">0</span>
+      </span>
+
+      <div class="separator"></div>
+
+      <button class="nv-btn" onclick="toggleFilesPanel()">Loaded Files</button>
+      <button class="nv-btn" onclick="clearMeshes()">Clear Meshes</button>
+    </div>
+
+    <!-- Loaded files panel -->
+    <div class="files-panel" id="filesPanel">
+      <div class="files-panel-header">
+        <span>Loaded Files</span>
+        <button class="nv-btn" onclick="clearAll()" style="font-size:0.7rem;padding:2px 8px;">Clear All</button>
+      </div>
+      <div id="filesList"></div>
+    </div>
+
     <!-- Canvas -->
     <div class="nv-canvas-wrap" id="canvasWrap">
       <canvas id="gl1"></canvas>
-      <div class="nv-drop-overlay" id="dropOverlay">Drop NIfTI / DICOM / Mesh files here</div>
+      <div class="nv-drop-overlay" id="dropOverlay">Drop any medical image file here (Volume, Mesh, Tract, Connectome)</div>
       <div class="nv-loading" id="loadingOverlay">Loading...</div>
     </div>
 
@@ -425,74 +656,99 @@
 
   <!-- ═══════════ CIVET QC Tab ═══════════ -->
   <div id="civet-tab" class="tab-content">
+    <!-- Subject selector toolbar -->
+    <div class="nv-toolbar">
+      <label class="nv-label">Subject ID</label>
+      <input type="text" class="nv-select" id="civetSubject" value="941S6471" style="width:150px"
+             onkeydown="if(event.key==='Enter')loadCivetQC()">
+      <button class="nv-btn primary" onclick="loadCivetQC()">Load QC</button>
+
+      <div class="separator"></div>
+
+      <label class="nv-label">Verify Dir</label>
+      <input type="text" class="nv-select" id="civetVerifyDir" value="verify" placeholder="verify or verify_SUBJ" style="width:180px">
+
+      <div class="separator"></div>
+
+      <span class="nv-label" id="civetStatus">Subject: 941S6471</span>
+    </div>
+
     <main>
+      <!-- Volume Slices -->
       <div class="card">
         <div class="card-header">
           <h2>Volume Slices &amp; Tissue Classification</h2>
           <span class="badge">T1</span>
         </div>
         <div class="card-body">
-          <img src="verify/volume_slices.png"
-               alt="Volume slices — T1 (top), Tissue classification (bottom)"
-               loading="lazy" onclick="openLightbox(this)">
+          <img id="civetVolSlices" src="verify/volume_slices.png"
+               alt="Volume slices" loading="lazy" onclick="openLightbox(this)">
           <p class="caption">Top: T1-weighted MRI (Axial / Coronal / Sagittal) — Bottom: Tissue classification (blue=CSF, green=GM, red=WM)</p>
         </div>
       </div>
 
+      <!-- White Matter Surface -->
       <div class="card">
         <div class="card-header">
           <h2>White Matter Surface</h2>
           <span class="badge">Surface</span>
         </div>
         <div class="card-body">
-          <img src="verify/surface_renders.png"
+          <img id="civetSurface" src="verify/surface_renders.png"
                alt="White matter surface renders" loading="lazy" onclick="openLightbox(this)">
           <p class="caption">White matter surface: L lateral / L medial / R lateral / R medial / Superior / Anterior</p>
         </div>
       </div>
 
+      <!-- Cortical Thickness -->
       <div class="card">
         <div class="card-header">
           <h2>Cortical Thickness</h2>
           <span class="badge">Thickness</span>
         </div>
         <div class="card-body">
-          <img src="verify/thickness_map.png"
+          <img id="civetThickness" src="verify/thickness_map.png"
                alt="Cortical thickness map" loading="lazy" onclick="openLightbox(this)">
           <p class="caption">Cortical thickness (tlink 30 mm) — Left &amp; Right hemispheres [1.0–5.0 mm]</p>
         </div>
       </div>
 
+      <!-- QC Statistics -->
       <div class="card">
         <div class="card-header">
           <h2>QC Statistics</h2>
           <span class="badge">QC</span>
         </div>
         <div class="card-body">
-          <img src="verify/qc_stats.png" alt="QC statistics" loading="lazy" onclick="openLightbox(this)">
-          <div class="qc-grid">
+          <img id="civetQcStats" src="verify/qc_stats.png" alt="QC statistics" loading="lazy" onclick="openLightbox(this)">
+          <div class="qc-grid" id="civetQcGrid">
             <div class="qc-card">
               <h3>Tissue Classification QC</h3>
-              <div class="qc-item"><span class="qc-label">CSF</span><span class="qc-value" style="color:#58a6ff">12.80%</span></div>
-              <div class="qc-bar"><div class="qc-bar-fill" style="width:12.8%;background:#58a6ff"></div></div>
-              <div class="qc-item"><span class="qc-label">Gray Matter (GM)</span><span class="qc-value" style="color:#3fb950">39.22%</span></div>
-              <div class="qc-bar"><div class="qc-bar-fill" style="width:39.22%;background:#3fb950"></div></div>
-              <div class="qc-item"><span class="qc-label">White Matter (WM)</span><span class="qc-value" style="color:#f85149">45.71%</span></div>
-              <div class="qc-bar"><div class="qc-bar-fill" style="width:45.71%;background:#f85149"></div></div>
-              <div class="qc-item"><span class="qc-label">Subcortical (SC)</span><span class="qc-value" style="color:#d2a8ff">2.27%</span></div>
-              <div class="qc-bar"><div class="qc-bar-fill" style="width:2.27%;background:#d2a8ff"></div></div>
+              <div id="civetClassifyQC">
+                <div class="qc-item"><span class="qc-label">CSF</span><span class="qc-value" style="color:#58a6ff">12.80%</span></div>
+                <div class="qc-bar"><div class="qc-bar-fill" style="width:12.8%;background:#58a6ff"></div></div>
+                <div class="qc-item"><span class="qc-label">Gray Matter (GM)</span><span class="qc-value" style="color:#3fb950">39.22%</span></div>
+                <div class="qc-bar"><div class="qc-bar-fill" style="width:39.22%;background:#3fb950"></div></div>
+                <div class="qc-item"><span class="qc-label">White Matter (WM)</span><span class="qc-value" style="color:#f85149">45.71%</span></div>
+                <div class="qc-bar"><div class="qc-bar-fill" style="width:45.71%;background:#f85149"></div></div>
+                <div class="qc-item"><span class="qc-label">Subcortical (SC)</span><span class="qc-value" style="color:#d2a8ff">2.27%</span></div>
+                <div class="qc-bar"><div class="qc-bar-fill" style="width:2.27%;background:#d2a8ff"></div></div>
+              </div>
             </div>
             <div class="qc-card">
               <h3>Surface QC</h3>
-              <div class="qc-item"><span class="qc-label">White Surface</span><span class="qc-value" style="color:#f0883e">14.18%</span></div>
-              <div class="qc-bar"><div class="qc-bar-fill" style="width:14.18%;background:#f0883e"></div></div>
-              <div class="qc-item"><span class="qc-label">Gray Surface</span><span class="qc-value" style="color:#e3b341">13.48%</span></div>
-              <div class="qc-bar"><div class="qc-bar-fill" style="width:13.48%;background:#e3b341"></div></div>
+              <div id="civetSurfaceQC">
+                <div class="qc-item"><span class="qc-label">White Surface</span><span class="qc-value" style="color:#f0883e">14.18%</span></div>
+                <div class="qc-bar"><div class="qc-bar-fill" style="width:14.18%;background:#f0883e"></div></div>
+                <div class="qc-item"><span class="qc-label">Gray Surface</span><span class="qc-value" style="color:#e3b341">13.48%</span></div>
+                <div class="qc-bar"><div class="qc-bar-fill" style="width:13.48%;background:#e3b341"></div></div>
+              </div>
             </div>
           </div>
         </div>
       </div>
 
+      <!-- Full CIVET Summary -->
       <div class="card">
         <div class="card-header">
           <h2>Full CIVET Summary</h2>
@@ -501,13 +757,66 @@
         <div class="card-body">
           <button class="summary-toggle" onclick="toggleSummary()">Show / Hide Full Summary Image</button>
           <div class="summary-content" id="summaryContent">
-            <img src="verify/civet_summary_941S6471.png"
+            <img id="civetSummary" src="verify/civet_summary_941S6471.png"
                  alt="CIVET QC summary" loading="lazy" onclick="openLightbox(this)">
-            <p class="caption">Combined CIVET QC summary — Subject 941S6471</p>
+            <p class="caption" id="civetSummaryCaption">Combined CIVET QC summary — Subject 941S6471</p>
           </div>
         </div>
       </div>
     </main>
+  </div>
+
+  <!-- ═══════════ Remote Visualization (VNC) Tab ═══════════ -->
+  <div id="slicer-tab" class="tab-content">
+    <div class="slicer-wrap">
+
+      <!-- Connection toolbar -->
+      <div class="nv-toolbar">
+        <label class="nv-label">Application</label>
+        <select class="nv-select" id="vncApp">
+          <option value="slicer">3D Slicer 5.8.1</option>
+          <option value="fsleyes">FSLeyes (FSL 6.0.7)</option>
+          <option value="freeview">Freeview (FreeSurfer 8.2.0)</option>
+          <option value="itksnap">ITK-SNAP 4.2.2</option>
+          <option value="desktop">Longleaf Desktop</option>
+        </select>
+        <button class="nv-btn primary" id="vncConnectBtn" onclick="connectVNC()">Connect</button>
+        <button class="nv-btn" style="background:#da3633;border-color:#da3633;" onclick="stopVNC()">Stop Session</button>
+
+        <div class="separator"></div>
+
+        <span class="nv-label" id="vncStatus">Not connected</span>
+        <input type="hidden" id="vncComputeNode" value="">
+        <input type="hidden" id="vncPassword" value="123456">
+      </div>
+
+      <!-- VNC display area -->
+      <div class="vnc-container" id="vncContainer">
+        <div class="vnc-placeholder" id="vncPlaceholder">
+          <h2>Remote Visualization via VNC</h2>
+          <p>Connect to a remote desktop application running on UNC Longleaf HPC.</p>
+          <div class="vnc-steps">
+            <h3>How to use:</h3>
+            <ol>
+              <li>Select an application from the dropdown.</li>
+              <li>Click <strong>Connect</strong> — everything is automatic (node allocation, VNC, tunneling).</li>
+              <li>To switch apps, just select a different one and click <strong>Connect</strong> again.</li>
+              <li>Click <strong>Stop Session</strong> when done to clean up.</li>
+            </ol>
+            <h3>Available on Longleaf (verified paths):</h3>
+            <ul style="padding-left:20px;line-height:1.8;font-size:0.85rem;">
+              <li><strong>3D Slicer 5.8.1</strong> — DICOM series, segmentation, registration, volume rendering</li>
+              <li><strong>FSLeyes (FSL 6.0.7)</strong> — FSL pipeline outputs, atlas exploration, FEAT/MELODIC</li>
+              <li><strong>Freeview (FreeSurfer 8.2.0)</strong> — FreeSurfer recon-all outputs, cortical surfaces</li>
+              <li><strong>ITK-SNAP 4.2.2</strong> — Semi-automatic segmentation (active contour), ROI</li>
+              <li><strong>Longleaf Desktop</strong> — Full XFCE desktop, access all tools via module load</li>
+            </ul>
+          </div>
+        </div>
+        <iframe id="vncFrame"></iframe>
+      </div>
+
+    </div>
   </div>
 
   <!-- Lightbox -->
@@ -517,7 +826,7 @@
   </div>
 
   <!-- NiiVue UMD from CDN -->
-  <script src="https://unpkg.com/@niivue/niivue@0.44.0/dist/niivue.umd.js"></script>
+  <script src="https://unpkg.com/@niivue/niivue@0.68.2/dist/niivue.umd.js"></script>
 
   <script>
     /* ── Tab switching ── */
@@ -525,7 +834,15 @@
       document.querySelectorAll('.tab-content').forEach(function(el) { el.classList.remove('active'); });
       document.querySelectorAll('.tab-btn').forEach(function(el) { el.classList.remove('active'); });
       document.getElementById(name + '-tab').classList.add('active');
-      event.target.classList.add('active');
+      // Find the clicked button
+      var btns = document.querySelectorAll('.tab-btn');
+      for (var i = 0; i < btns.length; i++) {
+        if (btns[i].textContent.toLowerCase().indexOf(name) !== -1 ||
+            (name === 'civet' && btns[i].textContent.indexOf('CIVET') !== -1) ||
+            (name === 'slicer' && btns[i].textContent.indexOf('VNC') !== -1)) {
+          btns[i].classList.add('active');
+        }
+      }
       if (name === 'niivue' && nv) nv.resizeListener();
     }
 
@@ -646,20 +963,49 @@
         nv.setRadiologicalConvention(this.checked);
       });
 
-      // File input — use blob URL approach for reliability
+      // File input — smart format routing (volume vs mesh/tract/connectome)
       document.getElementById('fileInput').addEventListener('change', async function() {
         if (this.files.length === 0) return;
         showLoading(true);
         try {
+          var meshList = [];
           var volumeList = [];
+          var connectomeFiles = [];
+          var loadedNames = [];
+
           for (var i = 0; i < this.files.length; i++) {
             var f = this.files[i];
             var blobUrl = URL.createObjectURL(f);
-            console.log('Loading file:', f.name, 'size:', f.size, 'blob:', blobUrl);
-            volumeList.push({ url: blobUrl, name: f.name });
+            var ext = f.name.split('.').pop().toUpperCase();
+            console.log('Loading file:', f.name, 'size:', f.size, 'ext:', ext, 'isMesh:', nv.isMeshExt(f.name));
+            loadedNames.push(f.name);
+
+            if (ext === 'JCON' || (ext === 'JSON' && f.name.toLowerCase().indexOf('connectome') !== -1)) {
+              // Connectome JSON — load separately
+              connectomeFiles.push(f);
+            } else if (nv.isMeshExt(f.name)) {
+              meshList.push({ url: blobUrl, name: f.name });
+            } else {
+              volumeList.push({ url: blobUrl, name: f.name });
+            }
           }
-          await nv.loadVolumes(volumeList);
-          document.getElementById('statusBar').textContent = 'Loaded: ' + this.files[0].name + (this.files.length > 1 ? ' (+' + (this.files.length - 1) + ' more)' : '');
+
+          if (volumeList.length > 0) await nv.loadVolumes(volumeList);
+          if (meshList.length > 0) await nv.loadMeshes(meshList);
+
+          // Load connectome files
+          for (var c = 0; c < connectomeFiles.length; c++) {
+            var text = await connectomeFiles[c].text();
+            var json = JSON.parse(text);
+            nv.loadConnectome(json);
+          }
+
+          var types = [];
+          if (volumeList.length > 0) types.push(volumeList.length + ' volume(s)');
+          if (meshList.length > 0) types.push(meshList.length + ' mesh/tract(s)');
+          if (connectomeFiles.length > 0) types.push(connectomeFiles.length + ' connectome(s)');
+          document.getElementById('statusBar').textContent = 'Loaded: ' + types.join(', ') + ' — ' + loadedNames.join(', ');
+          updateMeshControls();
         } catch (err) {
           document.getElementById('statusBar').textContent = 'Error: ' + err.message;
           console.error('File load error:', err);
@@ -681,6 +1027,42 @@
       });
       wrap.addEventListener('drop', function(e) {
         overlay.classList.remove('active');
+        // Update mesh controls after NiiVue processes the drop
+        setTimeout(function() { updateMeshControls(); }, 500);
+      });
+
+      // Mesh shader
+      document.getElementById('meshShader').addEventListener('change', function() {
+        if (nv.meshes.length > 0) {
+          nv.setMeshShader(nv.meshes.length - 1, parseInt(this.value));
+        }
+      });
+
+      // Mesh opacity
+      document.getElementById('meshOpacity').addEventListener('input', function() {
+        var val = parseFloat(this.value);
+        for (var i = 0; i < nv.meshes.length; i++) {
+          nv.setMeshProperty(nv.meshes[i].id, 'opacity', val);
+        }
+      });
+
+      // Fiber radius
+      document.getElementById('fiberRadius').addEventListener('input', function() {
+        var val = parseFloat(this.value);
+        for (var i = 0; i < nv.meshes.length; i++) {
+          nv.setMeshProperty(nv.meshes[i].id, 'fiberRadius', val);
+        }
+      });
+
+      // CIFTI frame slider (for .dtseries.nii 4D timeseries)
+      document.getElementById('ciftiFrame').addEventListener('input', function() {
+        var frame = parseInt(this.value);
+        document.getElementById('ciftiFrameLabel').textContent = frame;
+        for (var i = 0; i < nv.meshes.length; i++) {
+          if (nv.meshes[i].layers && nv.meshes[i].layers.length > 0) {
+            nv.setMeshLayerProperty(nv.meshes[i].id, 0, 'frame4D', frame);
+          }
+        }
       });
 
       } catch (initErr) {
@@ -690,21 +1072,47 @@
     }
 
     /* ── Toolbar actions ── */
-    async function loadSample() {
-      if (!nv) return;
+    var DEMO_BASE = 'https://raw.githubusercontent.com/niivue/niivue/v0.68.2/packages/niivue/demos/images/';
+    var DEMO_VOLUMES = 'https://niivue.github.io/niivue-demo-images/';
+
+    async function loadSample(type) {
+      if (!nv || !type) return;
       showLoading(true);
       try {
-        await nv.loadVolumes([{
-          url: 'https://niivue.github.io/niivue-demo-images/mni152.nii.gz',
-          colormap: 'gray',
-          opacity: 1
-        }]);
-        document.getElementById('statusBar').textContent = 'Loaded sample: MNI152 T1 1mm template';
+        switch (type) {
+          case 'mni152':
+            await nv.loadVolumes([{ url: DEMO_VOLUMES + 'mni152.nii.gz', colormap: 'gray', opacity: 1 }]);
+            document.getElementById('statusBar').textContent = 'Loaded sample: MNI152 T1 1mm template';
+            break;
+          case 'mesh':
+            await nv.loadMeshes([{ url: DEMO_BASE + 'BrainMesh_ICBM152.lh.mz3' }]);
+            nv.setSliceType(nv.sliceTypeRender);
+            document.getElementById('sliceType').value = '4';
+            document.getElementById('statusBar').textContent = 'Loaded sample: Left hemisphere pial surface (mz3)';
+            break;
+          case 'tract':
+            await nv.loadMeshes([{ url: DEMO_BASE + 'dpsv.trx' }]);
+            nv.setSliceType(nv.sliceTypeRender);
+            document.getElementById('sliceType').value = '4';
+            document.getElementById('statusBar').textContent = 'Loaded sample: Fiber tracts (TRX)';
+            break;
+          case 'connectome':
+            var resp = await fetch(DEMO_BASE + 'connectome.jcon');
+            var json = await resp.json();
+            await nv.loadVolumes([{ url: DEMO_VOLUMES + 'mni152.nii.gz', colormap: 'gray', opacity: 0.3 }]);
+            nv.loadConnectome(json);
+            nv.setSliceType(nv.sliceTypeRender);
+            document.getElementById('sliceType').value = '4';
+            document.getElementById('statusBar').textContent = 'Loaded sample: Connectome on MNI152';
+            break;
+        }
+        updateMeshControls();
       } catch (err) {
         document.getElementById('statusBar').textContent = 'Error loading sample: ' + err.message;
         console.error('Sample load error:', err);
       } finally {
         showLoading(false);
+        document.getElementById('sampleSelect').value = '';
       }
     }
 
@@ -717,11 +1125,276 @@
       }
       showLoading(true);
       try {
-        await nv.loadVolumes([{ url: path, colormap: 'gray', opacity: 1 }]);
-        document.getElementById('statusBar').textContent = 'Loaded from server: ' + path;
+        // Use /api/file endpoint for absolute paths, otherwise relative
+        var url = path.startsWith('/') ? '/api/file?path=' + encodeURIComponent(path) : path;
+        var ext = path.split('.').pop().toUpperCase();
+
+        if (isCiftiFile(path)) {
+          // CIFTI — load as mesh overlay with standard surfaces
+          await handleCiftiServer(path, url);
+          document.getElementById('statusBar').textContent = 'Loaded CIFTI from server: ' + path;
+        } else if (ext === 'MNC' || ext === 'MNC2') {
+          // MINC — convert via server
+          var resp = await fetch('/api/convert-minc', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ path: path })
+          });
+          if (!resp.ok) { var e = await resp.json(); throw new Error(e.error); }
+          var blob = await resp.blob();
+          var blobUrl = URL.createObjectURL(blob);
+          await nv.loadVolumes([{ url: blobUrl, name: 'converted.nii', colormap: 'gray', opacity: 1 }]);
+          document.getElementById('statusBar').textContent = 'Loaded MINC (converted): ' + path;
+        } else if (!path.includes('.') || path.endsWith('/')) {
+          // No extension — likely a DICOM directory
+          await convertDicomServer(path.replace(/\/$/, ''));
+        } else if (ext === 'JCON') {
+          // Connectome JSON
+          var resp = await fetch(url);
+          var json = await resp.json();
+          nv.loadConnectome(json);
+          document.getElementById('statusBar').textContent = 'Loaded connectome from server: ' + path;
+        } else if (nv.isMeshExt(path)) {
+          await nv.loadMeshes([{ url: url }]);
+          document.getElementById('statusBar').textContent = 'Loaded mesh from server: ' + path;
+        } else {
+          await nv.loadVolumes([{ url: url, colormap: 'gray', opacity: 1 }]);
+          document.getElementById('statusBar').textContent = 'Loaded volume from server: ' + path;
+        }
+        updateMeshControls();
       } catch (err) {
         document.getElementById('statusBar').textContent = 'Error loading server file: ' + err.message;
         console.error('Server file load error:', err);
+      } finally {
+        showLoading(false);
+      }
+    }
+
+    /* ── CIFTI support ── */
+    var CIFTI_SURFACE_BASE = 'https://raw.githubusercontent.com/niivue/niivue/v0.68.2/packages/niivue/demos/images/';
+    var CIFTI_SURFACES = {
+      left: CIFTI_SURFACE_BASE + 'Conte69.L.inflated.32k_fs_LR.surf.gii',
+      right: CIFTI_SURFACE_BASE + 'Conte69.R.inflated.32k_fs_LR.surf.gii'
+    };
+
+    function isCiftiFile(name) {
+      var l = name.toLowerCase();
+      return l.endsWith('.dscalar.nii') || l.endsWith('.dlabel.nii') || l.endsWith('.dtseries.nii');
+    }
+
+    async function handleCiftiFile(file, blobUrl) {
+      // CIFTI files must be loaded as layers on surface meshes
+      var isDtseries = file.name.toLowerCase().endsWith('.dtseries.nii');
+      document.getElementById('statusBar').textContent = 'Loading CIFTI with standard surfaces...';
+
+      var layerOpts = {
+        url: blobUrl,
+        colormap: 'rocket',
+        opacity: 0.7
+      };
+      if (isDtseries) {
+        layerOpts.cal_min = 0.01;
+        layerOpts.cal_max = 3.5;
+      }
+
+      // Load both hemispheres with CIFTI as overlay
+      await nv.loadMeshes([
+        {
+          url: CIFTI_SURFACES.left,
+          rgba255: [255, 255, 255, 255],
+          layers: [layerOpts]
+        },
+        {
+          url: CIFTI_SURFACES.right,
+          rgba255: [255, 255, 255, 255],
+          layers: [layerOpts]
+        }
+      ]);
+
+      // Switch to 3D render view for best CIFTI visualization
+      nv.setSliceType(nv.sliceTypeRender);
+      document.getElementById('sliceType').value = '4';
+
+      // Show CIFTI controls for dtseries
+      if (isDtseries) {
+        showCiftiFrameControl(true);
+      }
+    }
+
+    async function handleCiftiServer(path, url) {
+      var isDtseries = path.toLowerCase().endsWith('.dtseries.nii');
+      document.getElementById('statusBar').textContent = 'Loading CIFTI with standard surfaces...';
+
+      var layerOpts = { url: url, colormap: 'rocket', opacity: 0.7 };
+      if (isDtseries) {
+        layerOpts.cal_min = 0.01;
+        layerOpts.cal_max = 3.5;
+      }
+
+      await nv.loadMeshes([
+        { url: CIFTI_SURFACES.left, rgba255: [255, 255, 255, 255], layers: [layerOpts] },
+        { url: CIFTI_SURFACES.right, rgba255: [255, 255, 255, 255], layers: [layerOpts] }
+      ]);
+      nv.setSliceType(nv.sliceTypeRender);
+      document.getElementById('sliceType').value = '4';
+      if (isDtseries) showCiftiFrameControl(true);
+    }
+
+    function showCiftiFrameControl(show) {
+      var ctrl = document.getElementById('ciftiFrameControl');
+      if (ctrl) ctrl.style.display = show ? 'inline-flex' : 'none';
+    }
+
+    /* ── Connectome: BrainNet Viewer .node/.edge converter ── */
+    function convertBrainNetToConnectome(nodeText, edgeText) {
+      var nodeLines = nodeText.trim().split('\n').filter(function(l) { return l.trim(); });
+      var nodes = nodeLines.map(function(line) {
+        var p = line.trim().split(/\s+/);
+        return {
+          name: p[5] || ('node' + nodes.length),
+          x: parseFloat(p[0]), y: parseFloat(p[1]), z: parseFloat(p[2]),
+          colorValue: parseFloat(p[3]) || 1,
+          sizeValue: parseFloat(p[4]) || 3
+        };
+      });
+      var edgeLines = edgeText.trim().split('\n').filter(function(l) { return l.trim(); });
+      var edges = [];
+      for (var i = 0; i < edgeLines.length; i++) {
+        var vals = edgeLines[i].trim().split(/\s+/);
+        for (var j = i + 1; j < vals.length; j++) {
+          var v = parseFloat(vals[j]);
+          if (v !== 0) edges.push({ first: i, second: j, colorValue: Math.abs(v) });
+        }
+      }
+      return {
+        name: 'BrainNet Connectome',
+        nodeColormap: 'warm', nodeColormapNegative: 'winter',
+        nodeMinColor: 0, nodeMaxColor: 5, nodeScale: 3,
+        edgeColormap: 'warm', edgeColormapNegative: 'winter',
+        edgeMin: 0, edgeMax: 5, edgeScale: 1,
+        nodes: nodes, edges: edges
+      };
+    }
+
+    // Connectome file input handler (.jcon, .json, .node+.edge)
+    document.getElementById('connectomeInput').addEventListener('change', async function() {
+      if (this.files.length === 0) return;
+      showLoading(true);
+      try {
+        var nodeFile = null, edgeFile = null, jsonFile = null;
+        for (var i = 0; i < this.files.length; i++) {
+          var name = this.files[i].name.toLowerCase();
+          if (name.endsWith('.node')) nodeFile = this.files[i];
+          else if (name.endsWith('.edge')) edgeFile = this.files[i];
+          else jsonFile = this.files[i];
+        }
+
+        var connectome;
+        if (nodeFile && edgeFile) {
+          // BrainNet Viewer format
+          var nodeText = await nodeFile.text();
+          var edgeText = await edgeFile.text();
+          connectome = convertBrainNetToConnectome(nodeText, edgeText);
+        } else if (jsonFile) {
+          var text = await jsonFile.text();
+          connectome = JSON.parse(text);
+        } else {
+          throw new Error('Need either a .jcon/.json file, or both .node and .edge files');
+        }
+
+        // Add background volume if none loaded
+        if (nv.volumes.length === 0) {
+          await nv.loadVolumes([{
+            url: DEMO_VOLUMES + 'mni152.nii.gz', colormap: 'gray', opacity: 0.3
+          }]);
+        }
+        nv.loadConnectome(connectome);
+        nv.setSliceType(nv.sliceTypeRender);
+        document.getElementById('sliceType').value = '4';
+        document.getElementById('statusBar').textContent = 'Loaded connectome: ' +
+          connectome.nodes.length + ' nodes, ' + connectome.edges.length + ' edges';
+        updateMeshControls();
+      } catch (err) {
+        document.getElementById('statusBar').textContent = 'Connectome error: ' + err.message;
+        console.error('Connectome load error:', err);
+      } finally {
+        showLoading(false);
+        this.value = '';
+      }
+    });
+
+    // DICOM folder handler — loads all .dcm files from a folder as volumes
+    document.getElementById('dicomFolderInput').addEventListener('change', async function() {
+      if (this.files.length === 0) return;
+      showLoading(true);
+      try {
+        // Filter for DICOM files
+        var dcmFiles = [];
+        for (var i = 0; i < this.files.length; i++) {
+          var name = this.files[i].name.toLowerCase();
+          if (name.endsWith('.dcm') || name.endsWith('.ima') || name.endsWith('.dicom') ||
+              !name.includes('.')) {
+            dcmFiles.push(this.files[i]);
+          }
+        }
+        if (dcmFiles.length === 0) {
+          document.getElementById('statusBar').textContent = 'No DICOM files found in folder.';
+          return;
+        }
+
+        // NiiVue can load DICOM series from multiple File objects
+        var volumeList = [];
+        for (var j = 0; j < dcmFiles.length; j++) {
+          var blobUrl = URL.createObjectURL(dcmFiles[j]);
+          volumeList.push({ url: blobUrl, name: dcmFiles[j].name });
+        }
+        await nv.loadVolumes(volumeList);
+        document.getElementById('statusBar').textContent = 'Loaded DICOM folder: ' + dcmFiles.length + ' files';
+        updateMeshControls();
+      } catch (err) {
+        document.getElementById('statusBar').textContent = 'DICOM load error: ' + err.message;
+        console.error('DICOM folder error:', err);
+      } finally {
+        showLoading(false);
+        this.value = '';
+      }
+    });
+
+    // Convert DICOM dir on server via Flask endpoint
+    async function convertDicomServer(dirPath) {
+      if (!nv) return;
+      showLoading(true);
+      try {
+        var resp = await fetch('/api/convert-dicom', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ path: dirPath })
+        });
+        if (!resp.ok) {
+          var err = await resp.json();
+          throw new Error(err.error || 'Conversion failed');
+        }
+        var contentType = resp.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+          // Multiple series — show list
+          var data = await resp.json();
+          document.getElementById('statusBar').textContent = 'Multiple DICOM series found: ' + data.files.join(', ');
+          // Load the first one
+          if (data.files.length > 0) {
+            var url = '/api/file?path=' + encodeURIComponent(data.tmpdir + '/' + data.files[0]);
+            await nv.loadVolumes([{ url: url, colormap: 'gray', opacity: 1 }]);
+          }
+        } else {
+          // Single file returned
+          var blob = await resp.blob();
+          var blobUrl = URL.createObjectURL(blob);
+          await nv.loadVolumes([{ url: blobUrl, name: 'converted.nii.gz', colormap: 'gray', opacity: 1 }]);
+          document.getElementById('statusBar').textContent = 'Loaded converted DICOM: ' + dirPath;
+        }
+        updateMeshControls();
+      } catch (err) {
+        document.getElementById('statusBar').textContent = 'DICOM conversion error: ' + err.message;
+        console.error('DICOM convert error:', err);
       } finally {
         showLoading(false);
       }
@@ -759,13 +1432,365 @@
       }
     }
 
+    /* ── Mesh controls & loaded files panel ── */
+    var TRACT_EXTS = ['TCK', 'TRK', 'TRX', 'TT', 'TRACT'];
+
+    function getFileType(name) {
+      var ext = name.split('.').pop().toUpperCase();
+      if (ext === 'JCON' || (ext === 'JSON' && name.toLowerCase().indexOf('connectome') !== -1)) return 'conn';
+      if (TRACT_EXTS.indexOf(ext) !== -1) return 'tract';
+      if (nv && nv.isMeshExt(name)) return 'mesh';
+      return 'vol';
+    }
+
+    function updateMeshControls() {
+      var hasMeshes = nv && nv.meshes && nv.meshes.length > 0;
+      var meshToolbar = document.getElementById('meshToolbar');
+      if (meshToolbar) meshToolbar.style.display = hasMeshes ? 'flex' : 'none';
+      updateFilesList();
+    }
+
+    function updateFilesList() {
+      var list = document.getElementById('filesList');
+      if (!list || !nv) return;
+      list.innerHTML = '';
+      var hasItems = false;
+
+      // Volumes
+      for (var i = 0; i < nv.volumes.length; i++) {
+        hasItems = true;
+        var v = nv.volumes[i];
+        var name = v.name || v.url || ('Volume ' + i);
+        var div = document.createElement('div');
+        div.className = 'file-item';
+        div.innerHTML = '<span class="file-type file-type-vol">VOL</span>' +
+          '<span class="file-name" title="' + name + '">' + name + '</span>' +
+          '<button class="file-remove" data-type="vol" data-idx="' + i + '" title="Remove">&times;</button>';
+        list.appendChild(div);
+      }
+
+      // Meshes
+      for (var j = 0; j < nv.meshes.length; j++) {
+        hasItems = true;
+        var m = nv.meshes[j];
+        var mname = m.name || m.url || ('Mesh ' + j);
+        var type = getFileType(mname);
+        var typeLabel = type === 'tract' ? 'TRACT' : (type === 'conn' ? 'CONN' : 'MESH');
+        var typeClass = type === 'tract' ? 'file-type-tract' : (type === 'conn' ? 'file-type-conn' : 'file-type-mesh');
+        var div2 = document.createElement('div');
+        div2.className = 'file-item';
+        div2.innerHTML = '<span class="file-type ' + typeClass + '">' + typeLabel + '</span>' +
+          '<span class="file-name" title="' + mname + '">' + mname + '</span>' +
+          '<button class="file-remove" data-type="mesh" data-idx="' + j + '" title="Remove">&times;</button>';
+        list.appendChild(div2);
+      }
+
+      // Bind remove buttons
+      list.querySelectorAll('.file-remove').forEach(function(btn) {
+        btn.onclick = function() {
+          var type = this.getAttribute('data-type');
+          var idx = parseInt(this.getAttribute('data-idx'));
+          if (type === 'vol' && nv.volumes[idx]) {
+            nv.removeVolume(nv.volumes[idx]);
+          } else if (type === 'mesh' && nv.meshes[idx]) {
+            nv.removeMesh(nv.meshes[idx]);
+          }
+          updateMeshControls();
+          nv.updateGLVolume();
+        };
+      });
+
+      // Show panel if it was visible and still has items
+      if (!hasItems) {
+        document.getElementById('filesPanel').classList.remove('active');
+      }
+    }
+
+    function toggleFilesPanel() {
+      var panel = document.getElementById('filesPanel');
+      panel.classList.toggle('active');
+      if (panel.classList.contains('active')) updateFilesList();
+    }
+
+    function clearMeshes() {
+      if (!nv) return;
+      while (nv.meshes.length > 0) {
+        nv.removeMesh(nv.meshes[0]);
+      }
+      updateMeshControls();
+      nv.updateGLVolume();
+      document.getElementById('statusBar').textContent = 'Meshes cleared.';
+    }
+
+    function clearAll() {
+      if (!nv) return;
+      while (nv.meshes.length > 0) nv.removeMesh(nv.meshes[0]);
+      while (nv.volumes.length > 0) nv.removeVolume(nv.volumes[0]);
+      updateMeshControls();
+      nv.updateGLVolume();
+      document.getElementById('filesPanel').classList.remove('active');
+      document.getElementById('statusBar').textContent = 'All files cleared.';
+    }
+
     // Enter key triggers server file load
     document.getElementById('serverPath').addEventListener('keydown', function(e) {
       if (e.key === 'Enter') loadServerFile();
     });
 
+    /* ── VNC (3D Slicer) ── */
+    /* ── Dynamic CIVET QC ── */
+    function loadCivetQC() {
+      var subj = document.getElementById('civetSubject').value.trim();
+      var dir = document.getElementById('civetVerifyDir').value.trim() || 'verify';
+      if (!subj) return;
+
+      // Update image sources
+      document.getElementById('civetVolSlices').src = dir + '/volume_slices.png';
+      document.getElementById('civetSurface').src = dir + '/surface_renders.png';
+      document.getElementById('civetThickness').src = dir + '/thickness_map.png';
+      document.getElementById('civetQcStats').src = dir + '/qc_stats.png';
+      document.getElementById('civetSummary').src = dir + '/civet_summary_' + subj + '.png';
+      document.getElementById('civetSummaryCaption').textContent = 'Combined CIVET QC summary — Subject ' + subj;
+      document.getElementById('civetStatus').textContent = 'Subject: ' + subj;
+
+      // Try to load QC statistics dynamically
+      loadCivetClassifyQC(dir, subj);
+      loadCivetSurfaceQC(dir, subj);
+    }
+
+    async function loadCivetClassifyQC(dir, subj) {
+      try {
+        var resp = await fetch(dir + '/sub_' + subj + '_classify_qc.txt');
+        if (!resp.ok) return;
+        var text = await resp.text();
+        // Parse: "classified image CSF 12.80%  GM 39.22%  WM 45.71%  SC  2.27%"
+        var match = text.match(/CSF\s+([\d.]+)%\s+GM\s+([\d.]+)%\s+WM\s+([\d.]+)%\s+SC\s+([\d.]+)%/);
+        if (match) {
+          var csf = match[1], gm = match[2], wm = match[3], sc = match[4];
+          var el = document.getElementById('civetClassifyQC');
+          el.innerHTML =
+            '<div class="qc-item"><span class="qc-label">CSF</span><span class="qc-value" style="color:#58a6ff">' + csf + '%</span></div>' +
+            '<div class="qc-bar"><div class="qc-bar-fill" style="width:' + csf + '%;background:#58a6ff"></div></div>' +
+            '<div class="qc-item"><span class="qc-label">Gray Matter (GM)</span><span class="qc-value" style="color:#3fb950">' + gm + '%</span></div>' +
+            '<div class="qc-bar"><div class="qc-bar-fill" style="width:' + gm + '%;background:#3fb950"></div></div>' +
+            '<div class="qc-item"><span class="qc-label">White Matter (WM)</span><span class="qc-value" style="color:#f85149">' + wm + '%</span></div>' +
+            '<div class="qc-bar"><div class="qc-bar-fill" style="width:' + wm + '%;background:#f85149"></div></div>' +
+            '<div class="qc-item"><span class="qc-label">Subcortical (SC)</span><span class="qc-value" style="color:#d2a8ff">' + sc + '%</span></div>' +
+            '<div class="qc-bar"><div class="qc-bar-fill" style="width:' + sc + '%;background:#d2a8ff"></div></div>';
+        }
+      } catch (e) { console.log('Could not load classify QC:', e); }
+    }
+
+    async function loadCivetSurfaceQC(dir, subj) {
+      try {
+        var resp = await fetch(dir + '/sub_' + subj + '_surface_qc.txt');
+        if (!resp.ok) return;
+        var text = await resp.text();
+        // Parse surface QC values — look for percentages
+        var lines = text.trim().split('\n');
+        var el = document.getElementById('civetSurfaceQC');
+        var html = '';
+        var colors = ['#f0883e', '#e3b341', '#58a6ff', '#3fb950'];
+        lines.forEach(function(line, i) {
+          var match = line.match(/([\w\s]+?)\s+([\d.]+)%/);
+          if (match) {
+            var label = match[1].trim();
+            var val = match[2];
+            var color = colors[i % colors.length];
+            html += '<div class="qc-item"><span class="qc-label">' + label + '</span><span class="qc-value" style="color:' + color + '">' + val + '%</span></div>';
+            html += '<div class="qc-bar"><div class="qc-bar-fill" style="width:' + val + '%;background:' + color + '"></div></div>';
+          }
+        });
+        if (html) el.innerHTML = html;
+      } catch (e) { console.log('Could not load surface QC:', e); }
+    }
+
+    // Handle URL parameters: ?subject=XXX&tab=civet&dir=verify_XXX
+    function handleUrlParams() {
+      var params = new URLSearchParams(window.location.search);
+      var subj = params.get('subject');
+      var tab = params.get('tab');
+      var dir = params.get('dir');
+
+      if (subj) {
+        document.getElementById('civetSubject').value = subj;
+        if (dir) document.getElementById('civetVerifyDir').value = dir;
+        loadCivetQC();
+      }
+      if (tab) {
+        switchTab(tab);
+      }
+    }
+
+    /* ── VNC (Remote Visualization) ── */
+    var vncCurrentApp = null; // tracks which app is actually running on VNC
+
+    async function connectVNC() {
+      var password = document.getElementById('vncPassword').value || '';
+      var host = window.location.hostname || 'localhost';
+      var frame = document.getElementById('vncFrame');
+      var placeholder = document.getElementById('vncPlaceholder');
+      var status = document.getElementById('vncStatus');
+      var connectBtn = document.getElementById('vncConnectBtn');
+      var selectedApp = document.getElementById('vncApp').value;
+      var appLabel = document.getElementById('vncApp').options[document.getElementById('vncApp').selectedIndex].text;
+      var computeNode = '';
+      var wsPort = 6080;
+
+      connectBtn.disabled = true;
+      connectBtn.textContent = 'Setting up...';
+
+      try {
+        // Step 1: Check if a VNC session already exists
+        status.textContent = 'Checking VNC session...';
+        status.style.color = '#e3b341';
+
+        var stateResp = await fetch('/api/vnc/state');
+        if (stateResp.ok) {
+          var state = await stateResp.json();
+          computeNode = state.compute_node;
+          wsPort = state.websocket_port || 6080;
+
+          if (state.app === selectedApp) {
+            // Same app — just reconnect iframe
+            status.textContent = 'Reconnecting to ' + appLabel + '...';
+          } else {
+            // Different app — switch
+            status.textContent = 'Switching to ' + appLabel + '...';
+            var switchResp = await fetch('/api/vnc/switch', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ app: selectedApp })
+            });
+            if (!switchResp.ok) {
+              var err = await switchResp.json();
+              throw new Error('Switch failed: ' + (err.error || 'unknown'));
+            }
+            vncCurrentApp = selectedApp;
+            status.textContent = 'Switched to ' + appLabel + ' — waiting for app to start...';
+            await new Promise(function(r) { setTimeout(r, 5000); });
+          }
+        } else {
+          // No session — auto-detect or auto-request a SLURM node
+          status.textContent = 'Finding compute node on Longleaf...';
+          var jobsResp = await fetch('/api/slurm/jobs');
+          var jobs = await jobsResp.json();
+
+          if (jobs.error) throw new Error(jobs.error);
+
+          if (jobs.length === 0) {
+            // No running jobs — submit one automatically
+            status.textContent = 'No SLURM job found. Requesting a compute node...';
+            var submitResp = await fetch('/api/slurm/start', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ partition: 'general', mem: '8g', time: '4:00:00' })
+            });
+            var submitResult = await submitResp.json();
+            if (submitResult.error) throw new Error('Job submit failed: ' + submitResult.error);
+
+            // Poll until job is running (up to 90s)
+            status.textContent = 'Job submitted. Waiting for node allocation...';
+            for (var attempt = 0; attempt < 18; attempt++) {
+              await new Promise(function(r) { setTimeout(r, 5000); });
+              var pollResp = await fetch('/api/slurm/jobs');
+              jobs = await pollResp.json();
+              if (jobs.length > 0) break;
+              status.textContent = 'Waiting for node allocation... (' + ((attempt + 1) * 5) + 's)';
+            }
+            if (jobs.length === 0) {
+              throw new Error('Node allocation timed out (90s). The cluster may be busy.');
+            }
+          }
+
+          computeNode = jobs[0].node;
+          status.textContent = 'Got node ' + computeNode + '. Starting ' + appLabel + '... (15-30s)';
+
+          // Start full VNC session
+          var startResp = await fetch('/api/vnc/start', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ compute_node: computeNode, app: selectedApp })
+          });
+          if (!startResp.ok) {
+            var err = await startResp.json();
+            throw new Error('VNC start failed: ' + (err.error || 'unknown'));
+          }
+          var startResult = await startResp.json();
+          vncCurrentApp = selectedApp;
+          if (startResult.state) wsPort = startResult.state.websocket_port || 6080;
+          status.textContent = 'VNC ready — connecting...';
+          await new Promise(function(r) { setTimeout(r, 3000); });
+        }
+
+        // Step 2: Connect noVNC iframe
+        var url = 'novnc/vnc_lite.html?host=' + host + '&port=' + wsPort +
+                  '&autoconnect=true&resize=scale&show_dot=true&password=' + encodeURIComponent(password);
+        frame.src = url;
+        frame.style.display = 'block';
+        placeholder.style.display = 'none';
+        status.textContent = 'Connecting to ' + appLabel + '...';
+        status.style.color = '#e3b341';
+
+        frame.onload = function() {
+          status.textContent = 'Connected — ' + appLabel + ' on ' + computeNode;
+          status.style.color = '#3fb950';
+          try {
+            var innerDoc = frame.contentDocument || frame.contentWindow.document;
+            var controlBar = innerDoc.getElementById('top_bar');
+            if (controlBar) controlBar.style.display = 'none';
+          } catch(e) {}
+        };
+      } catch (e) {
+        status.textContent = e.message;
+        status.style.color = '#f85149';
+      } finally {
+        connectBtn.disabled = false;
+        connectBtn.textContent = 'Connect';
+      }
+    }
+
+    async function stopVNC() {
+      var status = document.getElementById('vncStatus');
+      var frame = document.getElementById('vncFrame');
+      var placeholder = document.getElementById('vncPlaceholder');
+
+      status.textContent = 'Stopping VNC session...';
+      status.style.color = '#e3b341';
+
+      // Disconnect iframe first
+      frame.src = '';
+      frame.style.display = 'none';
+      placeholder.style.display = 'flex';
+
+      try {
+        var resp = await fetch('/api/vnc/stop', { method: 'POST' });
+        var result = await resp.json();
+        status.textContent = 'Session stopped';
+        status.style.color = '#8b949e';
+        vncCurrentApp = null;
+      } catch (e) {
+        status.textContent = 'Stop error: ' + e.message;
+        status.style.color = '#f85149';
+      }
+    }
+
     /* ── Init ── */
     initNiiVue();
+    handleUrlParams();
+
+    // Auto-populate VNC compute node from existing session
+    fetch('/api/vnc/state').then(function(r) {
+      if (r.ok) return r.json();
+    }).then(function(state) {
+      if (state && state.compute_node) {
+        document.getElementById('vncComputeNode').value = state.compute_node;
+        document.getElementById('vncApp').value = state.app || 'slicer';
+        document.getElementById('vncStatus').textContent = 'Session active: ' + (state.app_label || state.app) + ' on ' + state.compute_node;
+        document.getElementById('vncStatus').style.color = '#3fb950';
+        vncCurrentApp = state.app;
+      }
+    }).catch(function() {});
   </script>
 </body>
 </html>

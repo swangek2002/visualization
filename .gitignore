@@ -11,3 +11,13 @@ Thumbs.db
 # Editor
 .vscode/
 .idea/
+
+# Third-party (cloned repos)
+novnc/
+
+# Runtime state/logs
+.vnc_state.json
+.vnc_manager.log
+.websockify.log
+.flask_server.log
+__pycache__/
