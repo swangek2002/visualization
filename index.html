@@ -1655,7 +1655,7 @@
             // Same app — just reconnect iframe
             status.textContent = 'Reconnecting to ' + appLabel + '...';
           } else {
-            // Different app — switch
+            // Different app — switch (VNC stays alive, only app changes)
             status.textContent = 'Switching to ' + appLabel + '...';
             var switchResp = await fetch('/api/vnc/switch', {
               method: 'POST',
@@ -1667,8 +1667,16 @@
               throw new Error('Switch failed: ' + (err.error || 'unknown'));
             }
             vncCurrentApp = selectedApp;
-            status.textContent = 'Switched to ' + appLabel + ' — waiting for app to start...';
-            await new Promise(function(r) { setTimeout(r, 5000); });
+            // VNC session stays alive — no need to reload iframe if already connected
+            if (frame.src && frame.style.display !== 'none') {
+              status.textContent = 'Switched to ' + appLabel + ' — loading...';
+              status.style.color = '#3fb950';
+              connectBtn.disabled = false;
+              connectBtn.textContent = 'Connect';
+              return; // iframe already connected, app will appear in same VNC
+            }
+            status.textContent = 'Switched to ' + appLabel + ' — connecting...';
+            await new Promise(function(r) { setTimeout(r, 3000); });
           }
         } else {
           // No session — auto-detect or auto-request a SLURM node
@@ -1725,7 +1733,7 @@
 
         // Step 2: Connect noVNC iframe
         var url = 'novnc/vnc_lite.html?host=' + host + '&port=' + wsPort +
-                  '&autoconnect=true&resize=scale&show_dot=true&password=' + encodeURIComponent(password);
+                  '&autoconnect=true&resize=remote&show_dot=true&password=' + encodeURIComponent(password);
         frame.src = url;
         frame.style.display = 'block';
         placeholder.style.display = 'none';

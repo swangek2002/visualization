@@ -204,11 +204,24 @@ VALID_APPS = {'slicer', 'fsleyes', 'freeview', 'itksnap', 'desktop'}
 
 @app.route('/api/vnc/state')
 def vnc_state():
-    """Get current VNC session state."""
+    """Get current VNC session state. Validates session is still alive."""
     if not os.path.isfile(VNC_STATE_FILE):
         return jsonify({'error': 'No VNC session active'}), 404
     with open(VNC_STATE_FILE) as f:
-        return jsonify(json.load(f))
+        state = json.load(f)
+    # Check if websockify is still running
+    ws_port = state.get('websocket_port', 6080)
+    import socket
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    try:
+        sock.settimeout(2)
+        sock.connect(('localhost', ws_port))
+        sock.close()
+    except:
+        # websockify dead — session is stale, clean up
+        os.remove(VNC_STATE_FILE)
+        return jsonify({'error': 'VNC session expired (websockify not running)'}), 404
+    return jsonify(state)
 
 
 @app.route('/api/vnc/start', methods=['POST'])
@@ -226,15 +239,17 @@ def vnc_start():
         return jsonify({'error': f'Invalid app. Choose from: {sorted(VALID_APPS)}'}), 400
 
     try:
-        result = subprocess.run(
-            ['/bin/bash', VNC_MANAGER, 'start', compute_node, app_name],
-            stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, timeout=120
-        )
-        if result.returncode != 0:
+        log_file = os.path.join(PROJECT_DIR, '.vnc_manager.log')
+        with open(log_file, 'a') as lf:
+            proc = subprocess.Popen(
+                ['/bin/bash', VNC_MANAGER, 'start', compute_node, app_name],
+                stdout=lf, stderr=lf, close_fds=True
+            )
+            proc.wait(timeout=120)
+
+        if proc.returncode != 0:
             return jsonify({
-                'error': 'VNC start failed',
-                'stderr': result.stderr,
-                'stdout': result.stdout
+                'error': 'VNC start failed (exit code %d). Check .vnc_manager.log' % proc.returncode
             }), 500
 
         # Read state
@@ -242,14 +257,12 @@ def vnc_start():
             with open(VNC_STATE_FILE) as f:
                 state = json.load(f)
             return jsonify({
-                'message': f'VNC session started: {state.get("app_label", app_name)} on {compute_node}',
+                'message': 'VNC session started: %s on %s' % (state.get('app_label', app_name), compute_node),
                 'state': state
             })
-        return jsonify({
-            'message': 'VNC start completed',
-            'stdout': result.stdout
-        })
+        return jsonify({'message': 'VNC start completed'})
     except subprocess.TimeoutExpired:
+        proc.kill()
         return jsonify({'error': 'VNC start timed out (120s)'}), 500
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -268,24 +281,24 @@ def vnc_switch_app():
         return jsonify({'error': 'No VNC session active. Use /api/vnc/start first.'}), 404
 
     try:
-        result = subprocess.run(
-            ['/bin/bash', VNC_MANAGER, 'switch', app_name],
-            stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, timeout=60
-        )
-        if result.returncode != 0:
-            return jsonify({
-                'error': 'Switch failed',
-                'stderr': result.stderr,
-                'stdout': result.stdout
-            }), 500
-        # Read updated state
+        log_file = os.path.join(PROJECT_DIR, '.vnc_manager.log')
+        with open(log_file, 'a') as lf:
+            proc = subprocess.Popen(
+                ['/bin/bash', VNC_MANAGER, 'switch', app_name],
+                stdout=lf, stderr=lf, close_fds=True
+            )
+            proc.wait(timeout=120)
+
+        if proc.returncode != 0:
+            return jsonify({'error': 'Switch failed (exit code %d)' % proc.returncode}), 500
         with open(VNC_STATE_FILE) as f:
             state = json.load(f)
         return jsonify({
-            'message': f'Switched to {state.get("app_label", app_name)}',
+            'message': 'Switched to %s' % state.get('app_label', app_name),
             'state': state
         })
     except subprocess.TimeoutExpired:
+        proc.kill()
         return jsonify({'error': 'Switch timed out (60s)'}), 500
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -295,14 +308,14 @@ def vnc_switch_app():
 def vnc_stop():
     """Stop the VNC session, tunnel, and websockify."""
     try:
-        result = subprocess.run(
-            ['/bin/bash', VNC_MANAGER, 'stop'],
-            stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, timeout=30
-        )
-        return jsonify({
-            'message': 'VNC session stopped',
-            'stdout': result.stdout
-        })
+        log_file = os.path.join(PROJECT_DIR, '.vnc_manager.log')
+        with open(log_file, 'a') as lf:
+            proc = subprocess.Popen(
+                ['/bin/bash', VNC_MANAGER, 'stop'],
+                stdout=lf, stderr=lf, close_fds=True
+            )
+            proc.wait(timeout=30)
+        return jsonify({'message': 'VNC session stopped'})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 

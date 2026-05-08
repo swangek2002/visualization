@@ -39,7 +39,7 @@ resolve_app() {
         ;;
       freeview)
         APP_LABEL="Freeview (FreeSurfer 8.2.0)"
-        APP_CMD="export FREESURFER_HOME=/nas/longleaf/apps/freesurfer/8.2.0/freesurfer; source \$FREESURFER_HOME/SetUpFreeSurfer.sh; /nas/longleaf/apps/freesurfer/8.2.0/freesurfer/bin/freeview"
+        APP_CMD="export FREESURFER_HOME=/nas/longleaf/apps/freesurfer/8.2.0/freesurfer; source /nas/longleaf/apps/freesurfer/8.2.0/freesurfer/SetUpFreeSurfer.sh; /nas/longleaf/apps/freesurfer/8.2.0/freesurfer/bin/freeview"
         APP_WINDOW="freeview"
         ;;
       itksnap)
@@ -68,50 +68,123 @@ deploy_and_start_vnc() {
     local escaped_win=$(printf '%s' "${APP_WINDOW}" | sed "s/'/'\\\\''/g")
 
     echo "[1/4] Deploying scripts to Longleaf for ${APP_LABEL}..."
-    ssh longleaf "mkdir -p ~/.vnc
+    ssh longleaf "mkdir -p ~/.vnc"
 
-cat > ~/.vnc/maximize_app.py << 'PYEOF'
+    # Deploy maximize script via stdin pipe (avoids quoting issues with regex)
+    cat << 'PYEOF' | ssh longleaf "cat > ~/.vnc/maximize_app.py"
 #!/usr/bin/env python3
-import ctypes, ctypes.util, subprocess, time, sys
+"""Continuously monitor screen size and keep target window fullscreen."""
+import subprocess, time, sys, os
+
 TARGET = sys.argv[1] if len(sys.argv) > 1 else 'Slicer'
+XDOTOOL = os.path.expanduser('~/miniconda3/bin/xdotool')
+
+def get_screen_size():
+    try:
+        r = subprocess.run(['xdpyinfo'], capture_output=True, text=True, timeout=3)
+        for line in r.stdout.split('\n'):
+            if 'dimensions:' in line:
+                dim = line.split(':')[1].strip().split()[0]
+                w, h = dim.split('x')
+                return int(w), int(h)
+    except: pass
+    return 1920, 1080
+
+def find_best_window():
+    try:
+        r = subprocess.run([XDOTOOL, 'search', '--name', TARGET],
+                          capture_output=True, text=True, timeout=5)
+        wids = [w.strip() for w in r.stdout.strip().split('\n') if w.strip()]
+        if not wids: return None
+        best_wid, best_area = None, 0
+        for wid in wids:
+            try:
+                g = subprocess.run([XDOTOOL, 'getwindowgeometry', '--shell', wid],
+                                  capture_output=True, text=True, timeout=3)
+                info = dict(line.split('=', 1) for line in g.stdout.strip().split('\n') if '=' in line)
+                area = int(info.get('WIDTH', 0)) * int(info.get('HEIGHT', 0))
+                if area > best_area: best_area, best_wid = area, wid
+            except: pass
+        return best_wid
+    except: return None
+
+def maximize_to(wid, w, h):
+    try:
+        subprocess.run(['xprop', '-id', wid, '-f', '_MOTIF_WM_HINTS', '32c',
+                       '-set', '_MOTIF_WM_HINTS', '2, 0, 0, 0, 0'],
+                      capture_output=True, timeout=3)
+    except: pass
+    try:
+        subprocess.run([XDOTOOL, 'windowmove', wid, '0', '0'],
+                      capture_output=True, timeout=5)
+    except: pass
+    try:
+        subprocess.run([XDOTOOL, 'windowsize', wid, str(w), str(h)],
+                      capture_output=True, timeout=5)
+    except: pass
+    try:
+        subprocess.run([XDOTOOL, 'windowactivate', wid],
+                      capture_output=True, timeout=3)
+    except: pass
+
 def main():
-    libname = ctypes.util.find_library('X11') or '/usr/lib64/libX11.so.6'
-    x11 = ctypes.cdll.LoadLibrary(libname)
-    x11.XOpenDisplay.restype = ctypes.c_void_p
-    x11.XMoveResizeWindow.argtypes = [ctypes.c_void_p, ctypes.c_ulong, ctypes.c_int, ctypes.c_int, ctypes.c_uint, ctypes.c_uint]
-    x11.XMoveResizeWindow.restype = ctypes.c_int
-    dpy = x11.XOpenDisplay(None)
-    if not dpy: return
-    for _ in range(120):
-        try:
-            r = subprocess.run(['xwininfo', '-root', '-tree'], capture_output=True, text=True, timeout=5)
-            for line in r.stdout.split('\n'):
-                if '0x' in line and TARGET in line:
-                    wid_str = line.strip().split()[0]
-                    if wid_str.startswith('0x'):
-                        wid = int(wid_str, 16)
-                        x11.XMoveResizeWindow(dpy, wid, 0, 0, 1920, 1080)
-                        x11.XFlush(dpy)
-                        return
-        except: pass
+    wid = None
+    for _ in range(60):
+        wid = find_best_window()
+        if wid: break
         time.sleep(1)
+    if not wid: return
+
+    w, h = get_screen_size()
+    maximize_to(wid, w, h)
+    time.sleep(2)
+    maximize_to(wid, w, h)
+
+    last_w, last_h = w, h
+    while True:
+        time.sleep(3)
+        try:
+            w, h = get_screen_size()
+            if w != last_w or h != last_h:
+                wid = find_best_window() or wid
+                maximize_to(wid, w, h)
+                time.sleep(1)
+                maximize_to(wid, w, h)
+                last_w, last_h = w, h
+        except: pass
+
 if __name__ == '__main__': main()
 PYEOF
 
-cat > ~/.vnc/app_xstartup.sh << 'XEOF'
+    # Deploy xstartup and empty WM script (no window manager = no decorations)
+    # App runs in background (&) so xstartup stays alive via "exec sleep infinity"
+    # This keeps VNC running even when apps are killed/switched
+    ssh longleaf "cat > ~/.vnc/app_xstartup.sh << 'XEOF'
 #!/bin/bash
 unset SESSION_MANAGER
 unset DBUS_SESSION_BUS_ADDRESS
 python3 ~/.vnc/maximize_app.py '${escaped_win}' &
-${escaped_cmd}
+${escaped_cmd} &
+# Keep VNC alive indefinitely — apps are managed separately
+exec sleep infinity
 XEOF
-chmod +x ~/.vnc/app_xstartup.sh"
+chmod +x ~/.vnc/app_xstartup.sh
+echo '#!/bin/sh
+# Empty WM - exits immediately so TurboVNC has no window manager (no decorations)
+exit 0' > ~/.vnc/nowm.sh
+chmod +x ~/.vnc/nowm.sh"
 
     echo "[2/4] Starting VNC on ${node}:${VNC_DISPLAY}..."
     ssh longleaf "ssh ${node} '
+      # Kill any existing VNC and all app processes
       /opt/TurboVNC/bin/vncserver -kill :${VNC_DISPLAY} 2>/dev/null || true
-      sleep 1
-      /opt/TurboVNC/bin/vncserver :${VNC_DISPLAY} -geometry 1920x1080 -depth 24 -xstartup ~/.vnc/app_xstartup.sh
+      pkill -u \$(whoami) -x Xvnc 2>/dev/null || true
+      for p in freeview ITK-SNAP SlicerApp-real Slicer xfce4-session; do pkill -u \$(whoami) -x \$p 2>/dev/null; done
+      pkill -u \$(whoami) -f \"fsleyes|maximize_app.py\" 2>/dev/null || true
+      # Clean ALL stale lock/pid files from crashed sessions
+      rm -f /tmp/.X${VNC_DISPLAY}-lock /tmp/.X11-unix/X${VNC_DISPLAY} ~/.vnc/*.pid 2>/dev/null
+      sleep 2
+      /opt/TurboVNC/bin/vncserver :${VNC_DISPLAY} -geometry 1920x1080 -depth 24 -noautokill -wm ~/.vnc/nowm.sh -xstartup ~/.vnc/app_xstartup.sh
     '"
 
     echo "[3/4] SSH tunnel: localhost:${LOCAL_VNC_PORT} → ${node}:${VNC_PORT}..."
@@ -169,30 +242,67 @@ switch_app() {
     local escaped_win=$(printf '%s' "${APP_WINDOW}" | sed "s/'/'\\\\''/g")
 
     echo "Switching to ${APP_LABEL} on ${node}..."
+    echo "  Strategy: keep VNC/tunnel/websockify alive, only swap the application"
 
-    ssh longleaf "cat > ~/.vnc/app_xstartup.sh << 'XEOF'
+    # maximize_app.py is already deployed by start — no need to redeploy on switch
+
+    # === KEY CHANGE: Don't restart VNC! Just kill old app and start new one ===
+    # Step 1: Write a launch script to longleaf (avoids nested SSH quoting issues)
+    cat << LAUNCHEOF | ssh longleaf "cat > ~/.vnc/launch_app.sh && chmod +x ~/.vnc/launch_app.sh"
 #!/bin/bash
+export DISPLAY=:${VNC_DISPLAY}
+# Kill old apps (exact match — never kills Xvnc or sleep)
+for p in freeview ITK-SNAP SlicerApp-real Slicer xfce4-session; do
+  pkill -u \$(whoami) -x \$p 2>/dev/null
+done
+pkill -u \$(whoami) -f "fsleyes|maximize_app.py" 2>/dev/null
+sleep 1
+# Start new app + maximize in background (VNC stays alive via sleep infinity in xstartup)
 unset SESSION_MANAGER
 unset DBUS_SESSION_BUS_ADDRESS
-python3 ~/.vnc/maximize_app.py '${escaped_win}' &
-${escaped_cmd}
-XEOF
-chmod +x ~/.vnc/app_xstartup.sh"
+python3 ~/.vnc/maximize_app.py '${APP_WINDOW}' &
+${APP_CMD} &
+LAUNCHEOF
 
-    ssh longleaf "ssh ${node} '
-      /opt/TurboVNC/bin/vncserver -kill :${VNC_DISPLAY} 2>/dev/null || true
-      sleep 1
-      /opt/TurboVNC/bin/vncserver :${VNC_DISPLAY} -geometry 1920x1080 -depth 24 -xstartup ~/.vnc/app_xstartup.sh
-    '"
+    # Step 2: Execute the launch script on the compute node via SSH
+    ssh longleaf "ssh ${node} 'nohup bash ~/.vnc/launch_app.sh > /tmp/vnc_app.log 2>&1 &'"
+    echo "  App launched on ${node}"
 
-    # Update state
-    python3 -c "
+    # Verify tunnel and websockify are still alive; rebuild only if dead
+    if ! lsof -ti:${LOCAL_VNC_PORT} > /dev/null 2>&1; then
+        echo "  SSH tunnel dead — rebuilding..."
+        ssh -f -N -o ServerAliveInterval=60 -o ServerAliveCountMax=3 \
+            -L ${LOCAL_VNC_PORT}:${node}:${VNC_PORT} longleaf
+    else
+        echo "  SSH tunnel alive — keeping it"
+    fi
+
+    if ! lsof -ti:${WEBSOCKET_PORT} > /dev/null 2>&1; then
+        echo "  websockify dead — rebuilding..."
+        WEBSOCKIFY="/Data0/swangek_data/conda_envs/survivehr/bin/websockify"
+        nohup ${WEBSOCKIFY} --web=${PROJECT_DIR}/novnc ${WEBSOCKET_PORT} localhost:${LOCAL_VNC_PORT} \
+            >> "${PROJECT_DIR}/.websockify.log" 2>&1 &
+        WSOCK_PID=$!
+        sleep 1
+        python3 -c "
+import json
+s = json.load(open('${STATE_FILE}'))
+s['app'] = '${app}'
+s['app_label'] = '${APP_LABEL}'
+s['websockify_pid'] = ${WSOCK_PID}
+json.dump(s, open('${STATE_FILE}', 'w'), indent=2)
+"
+    else
+        echo "  websockify alive — keeping it"
+        python3 -c "
 import json
 s = json.load(open('${STATE_FILE}'))
 s['app'] = '${app}'
 s['app_label'] = '${APP_LABEL}'
 json.dump(s, open('${STATE_FILE}', 'w'), indent=2)
 "
+    fi
+
     echo "DONE: Switched to ${APP_LABEL}"
 }
 
