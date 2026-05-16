@@ -47,6 +47,48 @@ resolve_app() {
         APP_CMD="/nas/longleaf/apps/itksnap/4.2.2/bin/itksnap"
         APP_WINDOW="ITK-SNAP"
         ;;
+      wbview)
+        APP_LABEL="Connectome Workbench (wb_view)"
+        APP_CMD="/nas/longleaf/apps/connectome/2.0.1/workbench/bin_rh_linux64/wb_view"
+        APP_WINDOW="Workbench"
+        ;;
+      paraview)
+        APP_LABEL="ParaView 5.13"
+        APP_CMD="/nas/longleaf/home/swangek/tools/paraview/bin/paraview"
+        APP_WINDOW="ParaView"
+        ;;
+      afni)
+        APP_LABEL="AFNI 25.1.10"
+        APP_CMD="cd /nas/longleaf/rhel9/apps/afni/25.1.10/abin && ./afni"
+        APP_WINDOW="AFNI"
+        ;;
+      mricron)
+        APP_LABEL="MRIcron"
+        APP_CMD="/nas/longleaf/apps/mricron/2019-09-02/mricron/MRIcron"
+        APP_WINDOW="MRIcron"
+        ;;
+      mricrogl)
+        APP_LABEL="MRIcroGL"
+        APP_CMD="/nas/longleaf/home/swangek/tools/MRIcroGL/MRIcroGL"
+        APP_WINDOW="MRIcroGL"
+        ;;
+      surfice)
+        APP_LABEL="Surf Ice"
+        APP_CMD="/nas/longleaf/home/swangek/tools/Surf_Ice/surfice"
+        APP_WINDOW="Surf Ice"
+        ;;
+      blender)
+        APP_LABEL="Blender 4.2"
+        APP_CMD="/nas/longleaf/home/swangek/tools/blender/blender"
+        APP_WINDOW="Blender"
+        ;;
+      brainnet)
+        APP_LABEL="BrainNet Viewer (MATLAB)"
+        # Use MATLAB R2021b — Java Swing UI works in VNC; R2024b's CEF desktop fails on software OpenGL.
+        # Append `pause` so MATLAB doesn't exit immediately after BrainNet returns.
+        APP_CMD="cd /nas/longleaf/home/swangek/tools/BrainNetViewer && /nas/longleaf/rhel9/apps/matlab/2021b/bin/matlab -nosplash -nodesktop -r \"addpath(pwd); BrainNet; pause\""
+        APP_WINDOW="BrainNet"
+        ;;
       desktop)
         APP_LABEL="Longleaf Desktop"
         APP_CMD="xfce4-session || /etc/X11/xinit/xinitrc || xterm"
@@ -68,7 +110,7 @@ deploy_and_start_vnc() {
     local escaped_win=$(printf '%s' "${APP_WINDOW}" | sed "s/'/'\\\\''/g")
 
     echo "[1/4] Deploying scripts to Longleaf for ${APP_LABEL}..."
-    ssh longleaf "mkdir -p ~/.vnc"
+    ssh -n longleaf "mkdir -p ~/.vnc"
 
     # Deploy maximize script via stdin pipe (avoids quoting issues with regex)
     cat << 'PYEOF' | ssh longleaf "cat > ~/.vnc/maximize_app.py"
@@ -175,17 +217,46 @@ exit 0' > ~/.vnc/nowm.sh
 chmod +x ~/.vnc/nowm.sh"
 
     echo "[2/4] Starting VNC on ${node}:${VNC_DISPLAY}..."
-    ssh longleaf "ssh ${node} '
-      # Kill any existing VNC and all app processes
-      /opt/TurboVNC/bin/vncserver -kill :${VNC_DISPLAY} 2>/dev/null || true
-      pkill -u \$(whoami) -x Xvnc 2>/dev/null || true
-      for p in freeview ITK-SNAP SlicerApp-real Slicer xfce4-session; do pkill -u \$(whoami) -x \$p 2>/dev/null; done
-      pkill -u \$(whoami) -f \"fsleyes|maximize_app.py\" 2>/dev/null || true
-      # Clean ALL stale lock/pid files from crashed sessions
-      rm -f /tmp/.X${VNC_DISPLAY}-lock /tmp/.X11-unix/X${VNC_DISPLAY} ~/.vnc/*.pid 2>/dev/null
-      sleep 2
-      /opt/TurboVNC/bin/vncserver :${VNC_DISPLAY} -geometry 1920x1080 -depth 24 -noautokill -wm ~/.vnc/nowm.sh -xstartup ~/.vnc/app_xstartup.sh
-    '"
+    # Pre-check: can we even SSH into the compute node? (pam_slurm_adopt may reject)
+    local probe=$(ssh -n longleaf "ssh -o ConnectTimeout=5 -o BatchMode=yes ${node} 'echo OK' 2>&1" 2>&1)
+    if ! echo "${probe}" | grep -q "^OK$"; then
+        echo "ERROR: Cannot SSH into ${node}: ${probe}"
+        echo "  Likely cause: SLURM allocated this node but pam_slurm_adopt is rejecting connections."
+        exit 2
+    fi
+    # Clean stale state files FIRST (PID files are on shared home dir, can interfere)
+    ssh -n longleaf "rm -f ~/.vnc/*.pid 2>/dev/null"
+
+    # Deploy a remote script that does the VNC start (avoids nested-SSH quoting issues)
+    cat << REMEOF | ssh longleaf "cat > ~/.vnc/start_vnc_on_node.sh && chmod +x ~/.vnc/start_vnc_on_node.sh"
+#!/bin/bash
+DISPLAY_NUM=${VNC_DISPLAY}
+VNC_PORT_NUM=${VNC_PORT}
+pkill -u \$(whoami) -x Xvnc 2>/dev/null || true
+for p in freeview ITK-SNAP SlicerApp-real Slicer xfce4-session wb_view paraview afni MRIcron MRIcroGL surfice blender MATLAB matlab; do
+  pkill -u \$(whoami) -x \$p 2>/dev/null
+done
+pkill -u \$(whoami) -f "fsleyes|maximize_app.py" 2>/dev/null || true
+pkill -u \$(whoami) -f "sleep infinity" 2>/dev/null || true
+rm -f /tmp/.X\${DISPLAY_NUM}-lock /tmp/.X11-unix/X\${DISPLAY_NUM} 2>/dev/null
+sleep 2
+/opt/TurboVNC/bin/vncserver :\${DISPLAY_NUM} -geometry 1920x1080 -depth 24 -noautokill -wm ~/.vnc/nowm.sh -xstartup ~/.vnc/app_xstartup.sh 2>&1
+sleep 3
+if ! ss -tln 2>/dev/null | grep -q ":\${VNC_PORT_NUM} "; then
+    echo "FATAL: VNC failed to start on :\${DISPLAY_NUM}" >&2
+    cat ~/.vnc/\$(hostname).ll.unc.edu:\${DISPLAY_NUM}.log 2>/dev/null | tail -20 >&2
+    exit 1
+fi
+echo "VNC verified running on :\${DISPLAY_NUM}"
+exit 0
+REMEOF
+
+    ssh -n longleaf "ssh ${node} 'bash ~/.vnc/start_vnc_on_node.sh'"
+    local rc=$?
+    if [ ${rc} -ne 0 ]; then
+        echo "ERROR: VNC failed to start on ${node} (exit code ${rc}). Aborting setup."
+        exit 1
+    fi
 
     echo "[3/4] SSH tunnel: localhost:${LOCAL_VNC_PORT} → ${node}:${VNC_PORT}..."
     # Kill old tunnel first
@@ -252,7 +323,7 @@ switch_app() {
 #!/bin/bash
 export DISPLAY=:${VNC_DISPLAY}
 # Kill old apps (exact match — never kills Xvnc or sleep)
-for p in freeview ITK-SNAP SlicerApp-real Slicer xfce4-session; do
+for p in freeview ITK-SNAP SlicerApp-real Slicer xfce4-session wb_view paraview afni MRIcron MRIcroGL surfice blender MATLAB matlab; do
   pkill -u \$(whoami) -x \$p 2>/dev/null
 done
 pkill -u \$(whoami) -f "fsleyes|maximize_app.py" 2>/dev/null
@@ -265,7 +336,7 @@ ${APP_CMD} &
 LAUNCHEOF
 
     # Step 2: Execute the launch script on the compute node via SSH
-    ssh longleaf "ssh ${node} 'nohup bash ~/.vnc/launch_app.sh > /tmp/vnc_app.log 2>&1 &'"
+    ssh -n longleaf "ssh ${node} 'nohup bash ~/.vnc/launch_app.sh > /tmp/vnc_app.log 2>&1 &'"
     echo "  App launched on ${node}"
 
     # Verify tunnel and websockify are still alive; rebuild only if dead
@@ -315,7 +386,7 @@ stop_all() {
     # Kill VNC on compute node
     if [ -f "${STATE_FILE}" ]; then
         local node=$(python3 -c "import json; print(json.load(open('${STATE_FILE}'))['compute_node'])")
-        ssh longleaf "ssh ${node} '/opt/TurboVNC/bin/vncserver -kill :${VNC_DISPLAY} 2>/dev/null || true'" 2>/dev/null || true
+        ssh -n longleaf "ssh ${node} '/opt/TurboVNC/bin/vncserver -kill :${VNC_DISPLAY} 2>/dev/null || true'" 2>/dev/null || true
         rm -f "${STATE_FILE}"
     fi
     echo "DONE: All stopped"

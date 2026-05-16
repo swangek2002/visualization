@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no"/>
+    <link rel="stylesheet" type="text/css" href="papaya.css?build=1455" />
+    <script type="text/javascript" src="papaya.js?build=1455"></script>
+    <title>Papaya Viewer</title>
+    <style>
+        body { margin: 0; padding: 0; background: #000; font-family: -apple-system, sans-serif; color: #eee; }
+        .papaya { width: 100% !important; }
+        #toolbar { padding: 8px 12px; background: #161b22; border-bottom: 1px solid #30363d; display: flex; gap: 10px; align-items: center; }
+        #toolbar input[type=file] { color: #ccc; }
+        #toolbar button { background: #1f6feb; color: white; border: none; padding: 6px 14px; border-radius: 4px; cursor: pointer; font-size: 13px; }
+        #toolbar button:hover { background: #388bfd; }
+        .hint { font-size: 12px; color: #8b949e; }
+    </style>
+    <script type="text/javascript">
+        // Initialize Papaya with no preloaded image, full controls visible
+        var params = [];
+        params["worldSpace"] = true;
+        params["kioskMode"] = false;
+        params["fullScreenPadding"] = false;
+        params["showControls"] = true;
+        params["showControlBar"] = true;
+        params["allowScroll"] = true;
+        params["showOrientation"] = true;
+        params["showRuler"] = true;
+
+        // Helper to load file from local disk
+        function loadFile() {
+            var file = document.getElementById('fileInput').files[0];
+            if (!file) return;
+            var newParams = Object.assign({}, params);
+            newParams["files"] = [file];
+            papaya.Container.resetViewer(0, newParams);
+        }
+
+        // Helper to load file from URL (e.g. /api/file?path=...)
+        function loadUrl() {
+            var url = document.getElementById('urlInput').value.trim();
+            if (!url) return;
+            var newParams = Object.assign({}, params);
+            newParams["images"] = [[url]];
+            papaya.Container.resetViewer(0, newParams);
+        }
+    </script>
+</head>
+<body>
+    <div id="toolbar">
+        <input type="file" id="fileInput" accept=".nii,.nii.gz,.dcm,.mnc,.mgh,.mgz" onchange="loadFile()">
+        <span class="hint">or load by URL:</span>
+        <input type="text" id="urlInput" placeholder="/api/file?path=/Data0/.../scan.nii.gz" style="flex:1;padding:6px;background:#0d1117;border:1px solid #30363d;color:#eee;border-radius:4px;font-size:12px;">
+        <button onclick="loadUrl()">Load</button>
+        <span class="hint">| Drag &amp; drop NIfTI/DICOM into the viewer below</span>
+    </div>
+    <div class="papaya" data-params="params"></div>
+</body>
+</html>

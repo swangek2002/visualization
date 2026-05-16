@@ -199,28 +199,126 @@ def convert_minc():
 
 VNC_STATE_FILE = os.path.join(PROJECT_DIR, '.vnc_state.json')
 VNC_MANAGER = os.path.join(PROJECT_DIR, 'vnc_manager.sh')
-VALID_APPS = {'slicer', 'fsleyes', 'freeview', 'itksnap', 'desktop'}
+VALID_APPS = {'slicer', 'fsleyes', 'freeview', 'itksnap', 'desktop', 'wbview', 'paraview', 'afni', 'mricron', 'mricrogl', 'surfice', 'blender', 'brainnet'}
+
+JUPYTER_STATE_FILE = os.path.join(PROJECT_DIR, '.jupyter_state.json')
+JUPYTER_MANAGER = os.path.join(PROJECT_DIR, 'jupyter_manager.sh')
+
+
+@app.route('/api/jupyter/state')
+def jupyter_state():
+    """Get current JupyterLab session state, with optional ?verify=1 health check."""
+    if not os.path.isfile(JUPYTER_STATE_FILE):
+        return jsonify({'error': 'No Jupyter session'}), 404
+    with open(JUPYTER_STATE_FILE) as f:
+        state = json.load(f)
+    local_port = state.get('local_port', 8889)
+    import socket
+    try:
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.settimeout(2)
+        sock.connect(('localhost', local_port))
+        sock.close()
+    except Exception:
+        os.remove(JUPYTER_STATE_FILE)
+        return jsonify({'error': 'Jupyter session expired (tunnel dead)'}), 404
+    return jsonify(state)
+
+
+@app.route('/api/jupyter/start', methods=['POST'])
+def jupyter_start():
+    """Start JupyterLab on a compute node (reuses VNC's SLURM job if any)."""
+    data = request.get_json(silent=True) or {}
+    compute_node = data.get('compute_node', '').strip()
+    if not compute_node:
+        return jsonify({'error': 'Missing compute_node'}), 400
+    try:
+        log_file = os.path.join(PROJECT_DIR, '.jupyter_manager.log')
+        with open(log_file, 'a') as lf:
+            proc = subprocess.Popen(
+                ['/bin/bash', JUPYTER_MANAGER, 'start', compute_node],
+                stdout=lf, stderr=lf, close_fds=True
+            )
+            proc.wait(timeout=180)
+        if proc.returncode != 0:
+            return jsonify({'error': f'Jupyter start failed (exit {proc.returncode})'}), 500
+        if os.path.isfile(JUPYTER_STATE_FILE):
+            with open(JUPYTER_STATE_FILE) as f:
+                state = json.load(f)
+            return jsonify({'message': 'Jupyter started', 'state': state})
+        return jsonify({'error': 'No state file written'}), 500
+    except subprocess.TimeoutExpired:
+        return jsonify({'error': 'Jupyter start timed out (180s)'}), 500
+
+
+@app.route('/api/jupyter/stop', methods=['POST'])
+def jupyter_stop():
+    try:
+        subprocess.run(['/bin/bash', JUPYTER_MANAGER, 'stop'],
+                      stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                      universal_newlines=True, timeout=30)
+        return jsonify({'message': 'Stopped'})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 
 @app.route('/api/vnc/state')
 def vnc_state():
-    """Get current VNC session state. Validates session is still alive."""
+    """Get current VNC session state.
+    Default: quick local check only (file + websockify socket).
+    With ?verify=1: also checks SLURM job + remote VNC port (slow, 5-20s).
+    If any check fails, state file is removed and 404 is returned.
+    """
     if not os.path.isfile(VNC_STATE_FILE):
         return jsonify({'error': 'No VNC session active'}), 404
     with open(VNC_STATE_FILE) as f:
         state = json.load(f)
-    # Check if websockify is still running
+
+    compute_node = state.get('compute_node', '')
     ws_port = state.get('websocket_port', 6080)
+
+    # Quick check: websockify alive locally
     import socket
-    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     try:
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.settimeout(2)
         sock.connect(('localhost', ws_port))
         sock.close()
-    except:
-        # websockify dead — session is stale, clean up
+    except Exception:
         os.remove(VNC_STATE_FILE)
-        return jsonify({'error': 'VNC session expired (websockify not running)'}), 404
+        return jsonify({'error': 'Session expired: websockify not running'}), 404
+
+    # Full verification only on demand
+    if request.args.get('verify') != '1':
+        return jsonify(state)
+
+    # Verify: SLURM job for our compute_node still running
+    try:
+        result = subprocess.run(
+            ['ssh', 'longleaf', "squeue -h -u $(whoami) -n vnc_viewer -o '%N'"],
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+            universal_newlines=True, timeout=60
+        )
+        active_nodes = [n.strip() for n in result.stdout.strip().split('\n') if n.strip()]
+        if compute_node not in active_nodes:
+            os.remove(VNC_STATE_FILE)
+            return jsonify({'error': f'Session expired: SLURM job on {compute_node} no longer active'}), 404
+    except Exception as e:
+        return jsonify({**state, 'warning': f'Could not verify SLURM: {e}'}), 200
+
+    # Verify: VNC actually listening on compute node
+    try:
+        result = subprocess.run(
+            ['ssh', 'longleaf', f"ssh -o ConnectTimeout=5 {compute_node} 'ss -tln | grep -q :5901 && echo OK || echo DEAD'"],
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+            universal_newlines=True, timeout=60
+        )
+        if 'OK' not in result.stdout:
+            os.remove(VNC_STATE_FILE)
+            return jsonify({'error': f'Session expired: VNC not listening on {compute_node}:5901'}), 404
+    except Exception as e:
+        return jsonify({**state, 'warning': f'Could not verify VNC: {e}'}), 200
+
     return jsonify(state)
 
 
@@ -245,9 +343,24 @@ def vnc_start():
                 ['/bin/bash', VNC_MANAGER, 'start', compute_node, app_name],
                 stdout=lf, stderr=lf, close_fds=True
             )
-            proc.wait(timeout=120)
+            proc.wait(timeout=240)
 
         if proc.returncode != 0:
+            # Exit code 2 = SSH probe failed (pam_slurm_adopt or node unreachable)
+            # Cancel the bad SLURM job so the next Connect requests a fresh node
+            if proc.returncode == 2:
+                try:
+                    subprocess.run(
+                        ['ssh', 'longleaf', 'scancel -u $(whoami) -n vnc_viewer'],
+                        stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                        universal_newlines=True, timeout=60
+                    )
+                except Exception:
+                    pass
+                return jsonify({
+                    'error': f'Node {compute_node} is unreachable (SLURM allocated but SSH rejected). The bad job has been cancelled — click Connect again to request a fresh node.',
+                    'retry': True
+                }), 503
             return jsonify({
                 'error': 'VNC start failed (exit code %d). Check .vnc_manager.log' % proc.returncode
             }), 500
@@ -263,7 +376,7 @@ def vnc_start():
         return jsonify({'message': 'VNC start completed'})
     except subprocess.TimeoutExpired:
         proc.kill()
-        return jsonify({'error': 'VNC start timed out (120s)'}), 500
+        return jsonify({'error': 'VNC start timed out (240s)'}), 500
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
@@ -287,7 +400,7 @@ def vnc_switch_app():
                 ['/bin/bash', VNC_MANAGER, 'switch', app_name],
                 stdout=lf, stderr=lf, close_fds=True
             )
-            proc.wait(timeout=120)
+            proc.wait(timeout=240)
 
         if proc.returncode != 0:
             return jsonify({'error': 'Switch failed (exit code %d)' % proc.returncode}), 500
@@ -299,7 +412,7 @@ def vnc_switch_app():
         })
     except subprocess.TimeoutExpired:
         proc.kill()
-        return jsonify({'error': 'Switch timed out (60s)'}), 500
+        return jsonify({'error': 'Switch timed out (120s)'}), 500
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
@@ -328,7 +441,7 @@ def slurm_jobs():
     try:
         result = subprocess.run(
             ['ssh', 'longleaf', 'squeue -u swangek --noheader -o "%N|%j|%T|%l|%M"'],
-            stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, timeout=15
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, timeout=60
         )
         jobs = []
         for line in result.stdout.strip().split('\n'):
@@ -374,7 +487,9 @@ def slurm_start():
         '#SBATCH -J {job_name}\n'
         '{gpu_line}'
         'echo "HOSTNAME=$(hostname)"\n'
-        'sleep infinity\n'
+        # Use tail -f /dev/null instead of "sleep infinity" because the VNC
+        # cleanup script pkills "sleep infinity" (xstartup) — would kill the job
+        'tail -f /dev/null\n'
     ).format(
         partition=partition, mem=mem, time=time_limit,
         job_name=job_name,
@@ -385,7 +500,7 @@ def slurm_start():
         # Submit batch job
         result = subprocess.run(
             ['ssh', 'longleaf', 'sbatch --parsable << \'SBEOF\'\n' + sbatch_script + 'SBEOF'],
-            stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, timeout=15
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, timeout=60
         )
         if result.returncode != 0:
             return jsonify({'error': 'sbatch failed', 'stderr': result.stderr}), 500

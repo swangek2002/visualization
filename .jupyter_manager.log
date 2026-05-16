@@ -1,0 +1,747 @@
+
+=== Tue May 12 13:49:51 EDT 2026 === jupyter_manager.sh start c0408 ===
+[1/3] Deploying Jupyter launch script to Longleaf...
+|----------------------------------------------------------------------|
+|     Longleaf has recently been upgraded to RHEL9                     |
+|     See https://help.rc.unc.edu/longleafOSupgrade/ for details.      |
+|----------------------------------------------------------------------|
+
+
+|----------------------------------------------------------------------|
+|     The University of North Carolina at Chapel Hill                  |
+|     ***********************************************                  |
+|     Unauthorized access to this system is prohibited.                |
+|                                                                      |
+| This is a University system intended for University purposes         |
+| only. The University reserves the right to monitor the use of        |
+| this system as required to ensure its stability, availability,       |
+| and security.                                                        |
+|                                                                      |
+| Please report any problems to "research@unc.edu", or 919-962-HELP,   |
+| or go to https://help.rc.unc.edu for assistance or to submit a       |
+| help request.                                                        |
+|----------------------------------------------------------------------|
+
+[2/3] Starting JupyterLab on c0408...
+|----------------------------------------------------------------------|
+|     Longleaf has recently been upgraded to RHEL9                     |
+|     See https://help.rc.unc.edu/longleafOSupgrade/ for details.      |
+|----------------------------------------------------------------------|
+
+
+|----------------------------------------------------------------------|
+|     The University of North Carolina at Chapel Hill                  |
+|     ***********************************************                  |
+|     Unauthorized access to this system is prohibited.                |
+|                                                                      |
+| This is a University system intended for University purposes         |
+| only. The University reserves the right to monitor the use of        |
+| this system as required to ensure its stability, availability,       |
+| and security.                                                        |
+|                                                                      |
+| Please report any problems to "research@unc.edu", or 919-962-HELP,   |
+| or go to https://help.rc.unc.edu for assistance or to submit a       |
+| help request.                                                        |
+|----------------------------------------------------------------------|
+
+FATAL: Jupyter failed to start
+[W 2026-05-12 13:50:08.445 ServerApp] ServerApp.token config is deprecated in 2.0. Use IdentityProvider.token.
+[I 2026-05-12 13:50:08.608 ServerApp] jupyter_lsp | extension was successfully linked.
+[I 2026-05-12 13:50:08.616 ServerApp] jupyter_server_terminals | extension was successfully linked.
+[I 2026-05-12 13:50:08.621 ServerApp] jupyterlab | extension was successfully linked.
+[I 2026-05-12 13:50:08.626 ServerApp] Writing Jupyter server cookie secret to /nas/longleaf/home/swangek/.local/share/jupyter/runtime/jupyter_cookie_secret
+ERROR: Failed to start Jupyter on c0408
+
+=== Tue May 12 13:50:46 EDT 2026 === jupyter_manager.sh start c0408 ===
+[1/3] Deploying Jupyter launch script to Longleaf...
+|----------------------------------------------------------------------|
+|     Longleaf has recently been upgraded to RHEL9                     |
+|     See https://help.rc.unc.edu/longleafOSupgrade/ for details.      |
+|----------------------------------------------------------------------|
+
+
+|----------------------------------------------------------------------|
+|     The University of North Carolina at Chapel Hill                  |
+|     ***********************************************                  |
+|     Unauthorized access to this system is prohibited.                |
+|                                                                      |
+| This is a University system intended for University purposes         |
+| only. The University reserves the right to monitor the use of        |
+| this system as required to ensure its stability, availability,       |
+| and security.                                                        |
+|                                                                      |
+| Please report any problems to "research@unc.edu", or 919-962-HELP,   |
+| or go to https://help.rc.unc.edu for assistance or to submit a       |
+| help request.                                                        |
+|----------------------------------------------------------------------|
+
+[2/3] Starting JupyterLab on c0408...
+|----------------------------------------------------------------------|
+|     Longleaf has recently been upgraded to RHEL9                     |
+|     See https://help.rc.unc.edu/longleafOSupgrade/ for details.      |
+|----------------------------------------------------------------------|
+
+
+|----------------------------------------------------------------------|
+|     The University of North Carolina at Chapel Hill                  |
+|     ***********************************************                  |
+|     Unauthorized access to this system is prohibited.                |
+|                                                                      |
+| This is a University system intended for University purposes         |
+| only. The University reserves the right to monitor the use of        |
+| this system as required to ensure its stability, availability,       |
+| and security.                                                        |
+|                                                                      |
+| Please report any problems to "research@unc.edu", or 919-962-HELP,   |
+| or go to https://help.rc.unc.edu for assistance or to submit a       |
+| help request.                                                        |
+|----------------------------------------------------------------------|
+
+Jupyter listening on :8888 (after 3*2s)
+[3/3] SSH tunnel: localhost:8889 → c0408:8888...
+|----------------------------------------------------------------------|
+|     Longleaf has recently been upgraded to RHEL9                     |
+|     See https://help.rc.unc.edu/longleafOSupgrade/ for details.      |
+|----------------------------------------------------------------------|
+
+
+|----------------------------------------------------------------------|
+|     The University of North Carolina at Chapel Hill                  |
+|     ***********************************************                  |
+|     Unauthorized access to this system is prohibited.                |
+|                                                                      |
+| This is a University system intended for University purposes         |
+| only. The University reserves the right to monitor the use of        |
+| this system as required to ensure its stability, availability,       |
+| and security.                                                        |
+|                                                                      |
+| Please report any problems to "research@unc.edu", or 919-962-HELP,   |
+| or go to https://help.rc.unc.edu for assistance or to submit a       |
+| help request.                                                        |
+|----------------------------------------------------------------------|
+
+DONE: JupyterLab ready at http://localhost:8889/lab?token=soPcFKNJLcGLk02dz15QOcUw
+channel 2: open failed: connect failed: Connection refused
+channel 2: open failed: connect failed: Connection refused
+channel 2: open failed: connect failed: Connection refused
+channel 2: open failed: connect failed: Connection refused
+
+=== Tue May 12 23:29:19 EDT 2026 === jupyter_manager.sh stop ===
+Stopping Jupyter...
+DONE: Jupyter stopped
+
+=== Tue May 12 23:29:29 EDT 2026 === jupyter_manager.sh start c0408 ===
+[1/3] Deploying Jupyter launch script to Longleaf...
+|----------------------------------------------------------------------|
+|     Longleaf has recently been upgraded to RHEL9                     |
+|     See https://help.rc.unc.edu/longleafOSupgrade/ for details.      |
+|----------------------------------------------------------------------|
+
+
+|----------------------------------------------------------------------|
+|     The University of North Carolina at Chapel Hill                  |
+|     ***********************************************                  |
+|     Unauthorized access to this system is prohibited.                |
+|                                                                      |
+| This is a University system intended for University purposes         |
+| only. The University reserves the right to monitor the use of        |
+| this system as required to ensure its stability, availability,       |
+| and security.                                                        |
+|                                                                      |
+| Please report any problems to "research@unc.edu", or 919-962-HELP,   |
+| or go to https://help.rc.unc.edu for assistance or to submit a       |
+| help request.                                                        |
+|----------------------------------------------------------------------|
+
+[2/3] Starting JupyterLab on c0408...
+|----------------------------------------------------------------------|
+|     Longleaf has recently been upgraded to RHEL9                     |
+|     See https://help.rc.unc.edu/longleafOSupgrade/ for details.      |
+|----------------------------------------------------------------------|
+
+
+|----------------------------------------------------------------------|
+|     The University of North Carolina at Chapel Hill                  |
+|     ***********************************************                  |
+|     Unauthorized access to this system is prohibited.                |
+|                                                                      |
+| This is a University system intended for University purposes         |
+| only. The University reserves the right to monitor the use of        |
+| this system as required to ensure its stability, availability,       |
+| and security.                                                        |
+|                                                                      |
+| Please report any problems to "research@unc.edu", or 919-962-HELP,   |
+| or go to https://help.rc.unc.edu for assistance or to submit a       |
+| help request.                                                        |
+|----------------------------------------------------------------------|
+
+Jupyter listening on :8888 (after 3*2s)
+[3/3] SSH tunnel: localhost:8889 → c0408:8888...
+|----------------------------------------------------------------------|
+|     Longleaf has recently been upgraded to RHEL9                     |
+|     See https://help.rc.unc.edu/longleafOSupgrade/ for details.      |
+|----------------------------------------------------------------------|
+
+
+|----------------------------------------------------------------------|
+|     The University of North Carolina at Chapel Hill                  |
+|     ***********************************************                  |
+|     Unauthorized access to this system is prohibited.                |
+|                                                                      |
+| This is a University system intended for University purposes         |
+| only. The University reserves the right to monitor the use of        |
+| this system as required to ensure its stability, availability,       |
+| and security.                                                        |
+|                                                                      |
+| Please report any problems to "research@unc.edu", or 919-962-HELP,   |
+| or go to https://help.rc.unc.edu for assistance or to submit a       |
+| help request.                                                        |
+|----------------------------------------------------------------------|
+
+DONE: JupyterLab ready at http://localhost:8889/lab?token=aarsPOLrJX6UnXBV9L492vgg
+
+=== Wed May 13 01:15:32 EDT 2026 === jupyter_manager.sh stop ===
+Stopping Jupyter...
+DONE: Jupyter stopped
+
+
+=== Wed May 13 05:13:43 EDT 2026 === jupyter_manager.sh start c0838 ===
+=== Wed May 13 05:13:43 EDT 2026 === jupyter_manager.sh start c0838 ===
+[1/3] Deploying Jupyter launch script to Longleaf...
+[1/3] Deploying Jupyter launch script to Longleaf...
+|----------------------------------------------------------------------|
+|     Longleaf has recently been upgraded to RHEL9                     |
+|     See https://help.rc.unc.edu/longleafOSupgrade/ for details.      |
+|----------------------------------------------------------------------|
+
+
+|----------------------------------------------------------------------|
+|     The University of North Carolina at Chapel Hill                  |
+|     ***********************************************                  |
+|     Unauthorized access to this system is prohibited.                |
+|                                                                      |
+| This is a University system intended for University purposes         |
+| only. The University reserves the right to monitor the use of        |
+| this system as required to ensure its stability, availability,       |
+| and security.                                                        |
+|                                                                      |
+| Please report any problems to "research@unc.edu", or 919-962-HELP,   |
+| or go to https://help.rc.unc.edu for assistance or to submit a       |
+| help request.                                                        |
+|----------------------------------------------------------------------|
+
+|----------------------------------------------------------------------|
+|     Longleaf has recently been upgraded to RHEL9                     |
+|     See https://help.rc.unc.edu/longleafOSupgrade/ for details.      |
+|----------------------------------------------------------------------|
+
+
+|----------------------------------------------------------------------|
+|     The University of North Carolina at Chapel Hill                  |
+|     ***********************************************                  |
+|     Unauthorized access to this system is prohibited.                |
+|                                                                      |
+| This is a University system intended for University purposes         |
+| only. The University reserves the right to monitor the use of        |
+| this system as required to ensure its stability, availability,       |
+| and security.                                                        |
+|                                                                      |
+| Please report any problems to "research@unc.edu", or 919-962-HELP,   |
+| or go to https://help.rc.unc.edu for assistance or to submit a       |
+| help request.                                                        |
+|----------------------------------------------------------------------|
+
+[2/3] Starting JupyterLab on c0838...
+[2/3] Starting JupyterLab on c0838...
+|----------------------------------------------------------------------|
+|     Longleaf has recently been upgraded to RHEL9                     |
+|     See https://help.rc.unc.edu/longleafOSupgrade/ for details.      |
+|----------------------------------------------------------------------|
+
+
+|----------------------------------------------------------------------|
+|     The University of North Carolina at Chapel Hill                  |
+|     ***********************************************                  |
+|     Unauthorized access to this system is prohibited.                |
+|                                                                      |
+| This is a University system intended for University purposes         |
+| only. The University reserves the right to monitor the use of        |
+| this system as required to ensure its stability, availability,       |
+| and security.                                                        |
+|                                                                      |
+| Please report any problems to "research@unc.edu", or 919-962-HELP,   |
+| or go to https://help.rc.unc.edu for assistance or to submit a       |
+| help request.                                                        |
+|----------------------------------------------------------------------|
+
+|----------------------------------------------------------------------|
+|     Longleaf has recently been upgraded to RHEL9                     |
+|     See https://help.rc.unc.edu/longleafOSupgrade/ for details.      |
+|----------------------------------------------------------------------|
+
+
+|----------------------------------------------------------------------|
+|     The University of North Carolina at Chapel Hill                  |
+|     ***********************************************                  |
+|     Unauthorized access to this system is prohibited.                |
+|                                                                      |
+| This is a University system intended for University purposes         |
+| only. The University reserves the right to monitor the use of        |
+| this system as required to ensure its stability, availability,       |
+| and security.                                                        |
+|                                                                      |
+| Please report any problems to "research@unc.edu", or 919-962-HELP,   |
+| or go to https://help.rc.unc.edu for assistance or to submit a       |
+| help request.                                                        |
+|----------------------------------------------------------------------|
+
+Jupyter listening on :8888 (after 4*2s)
+Jupyter listening on :8888 (after 4*2s)
+[3/3] SSH tunnel: localhost:8889 → c0838:8888...
+[3/3] SSH tunnel: localhost:8889 → c0838:8888...
+|----------------------------------------------------------------------|
+|     Longleaf has recently been upgraded to RHEL9                     |
+|     See https://help.rc.unc.edu/longleafOSupgrade/ for details.      |
+|----------------------------------------------------------------------|
+
+
+|----------------------------------------------------------------------|
+|     The University of North Carolina at Chapel Hill                  |
+|     ***********************************************                  |
+|     Unauthorized access to this system is prohibited.                |
+|                                                                      |
+| This is a University system intended for University purposes         |
+| only. The University reserves the right to monitor the use of        |
+| this system as required to ensure its stability, availability,       |
+| and security.                                                        |
+|                                                                      |
+| Please report any problems to "research@unc.edu", or 919-962-HELP,   |
+| or go to https://help.rc.unc.edu for assistance or to submit a       |
+| help request.                                                        |
+|----------------------------------------------------------------------|
+
+|----------------------------------------------------------------------|
+|     Longleaf has recently been upgraded to RHEL9                     |
+|     See https://help.rc.unc.edu/longleafOSupgrade/ for details.      |
+|----------------------------------------------------------------------|
+
+
+|----------------------------------------------------------------------|
+|     The University of North Carolina at Chapel Hill                  |
+|     ***********************************************                  |
+|     Unauthorized access to this system is prohibited.                |
+|                                                                      |
+| This is a University system intended for University purposes         |
+| only. The University reserves the right to monitor the use of        |
+| this system as required to ensure its stability, availability,       |
+| and security.                                                        |
+|                                                                      |
+| Please report any problems to "research@unc.edu", or 919-962-HELP,   |
+| or go to https://help.rc.unc.edu for assistance or to submit a       |
+| help request.                                                        |
+|----------------------------------------------------------------------|
+
+DONE: JupyterLab ready at http://localhost:8889/lab?token=tlP9UVef7SXPlJPau0qALiaw
+DONE: JupyterLab ready at http://localhost:8889/lab?token=tlP9UVef7SXPlJPau0qALiaw
+
+=== Wed May 13 06:59:36 EDT 2026 === jupyter_manager.sh stop ===
+Stopping Jupyter...
+DONE: Jupyter stopped
+
+=== Wed May 13 06:59:53 EDT 2026 === jupyter_manager.sh start c0838 ===
+[1/3] Deploying Jupyter launch script to Longleaf...
+|----------------------------------------------------------------------|
+|     Longleaf has recently been upgraded to RHEL9                     |
+|     See https://help.rc.unc.edu/longleafOSupgrade/ for details.      |
+|----------------------------------------------------------------------|
+
+
+|----------------------------------------------------------------------|
+|     The University of North Carolina at Chapel Hill                  |
+|     ***********************************************                  |
+|     Unauthorized access to this system is prohibited.                |
+|                                                                      |
+| This is a University system intended for University purposes         |
+| only. The University reserves the right to monitor the use of        |
+| this system as required to ensure its stability, availability,       |
+| and security.                                                        |
+|                                                                      |
+| Please report any problems to "research@unc.edu", or 919-962-HELP,   |
+| or go to https://help.rc.unc.edu for assistance or to submit a       |
+| help request.                                                        |
+|----------------------------------------------------------------------|
+
+[2/3] Starting JupyterLab on c0838...
+|----------------------------------------------------------------------|
+|     Longleaf has recently been upgraded to RHEL9                     |
+|     See https://help.rc.unc.edu/longleafOSupgrade/ for details.      |
+|----------------------------------------------------------------------|
+
+
+|----------------------------------------------------------------------|
+|     The University of North Carolina at Chapel Hill                  |
+|     ***********************************************                  |
+|     Unauthorized access to this system is prohibited.                |
+|                                                                      |
+| This is a University system intended for University purposes         |
+| only. The University reserves the right to monitor the use of        |
+| this system as required to ensure its stability, availability,       |
+| and security.                                                        |
+|                                                                      |
+| Please report any problems to "research@unc.edu", or 919-962-HELP,   |
+| or go to https://help.rc.unc.edu for assistance or to submit a       |
+| help request.                                                        |
+|----------------------------------------------------------------------|
+
+Jupyter listening on :8888 (after 2*2s)
+[3/3] SSH tunnel: localhost:6081 → c0838:8888...
+|----------------------------------------------------------------------|
+|     Longleaf has recently been upgraded to RHEL9                     |
+|     See https://help.rc.unc.edu/longleafOSupgrade/ for details.      |
+|----------------------------------------------------------------------|
+
+
+|----------------------------------------------------------------------|
+|     The University of North Carolina at Chapel Hill                  |
+|     ***********************************************                  |
+|     Unauthorized access to this system is prohibited.                |
+|                                                                      |
+| This is a University system intended for University purposes         |
+| only. The University reserves the right to monitor the use of        |
+| this system as required to ensure its stability, availability,       |
+| and security.                                                        |
+|                                                                      |
+| Please report any problems to "research@unc.edu", or 919-962-HELP,   |
+| or go to https://help.rc.unc.edu for assistance or to submit a       |
+| help request.                                                        |
+|----------------------------------------------------------------------|
+
+DONE: JupyterLab ready at http://localhost:6081/lab?token=hShhrNo66qG8M94AuKjJehvo
+
+=== Wed May 13 08:26:09 EDT 2026 === jupyter_manager.sh stop ===
+Stopping Jupyter...
+DONE: Jupyter stopped
+
+=== Wed May 13 08:26:21 EDT 2026 === jupyter_manager.sh start c0838 ===
+[1/3] Deploying Jupyter launch script to Longleaf...
+|----------------------------------------------------------------------|
+|     Longleaf has recently been upgraded to RHEL9                     |
+|     See https://help.rc.unc.edu/longleafOSupgrade/ for details.      |
+|----------------------------------------------------------------------|
+
+
+|----------------------------------------------------------------------|
+|     The University of North Carolina at Chapel Hill                  |
+|     ***********************************************                  |
+|     Unauthorized access to this system is prohibited.                |
+|                                                                      |
+| This is a University system intended for University purposes         |
+| only. The University reserves the right to monitor the use of        |
+| this system as required to ensure its stability, availability,       |
+| and security.                                                        |
+|                                                                      |
+| Please report any problems to "research@unc.edu", or 919-962-HELP,   |
+| or go to https://help.rc.unc.edu for assistance or to submit a       |
+| help request.                                                        |
+|----------------------------------------------------------------------|
+
+[2/3] Starting JupyterLab on c0838...
+|----------------------------------------------------------------------|
+|     Longleaf has recently been upgraded to RHEL9                     |
+|     See https://help.rc.unc.edu/longleafOSupgrade/ for details.      |
+|----------------------------------------------------------------------|
+
+
+|----------------------------------------------------------------------|
+|     The University of North Carolina at Chapel Hill                  |
+|     ***********************************************                  |
+|     Unauthorized access to this system is prohibited.                |
+|                                                                      |
+| This is a University system intended for University purposes         |
+| only. The University reserves the right to monitor the use of        |
+| this system as required to ensure its stability, availability,       |
+| and security.                                                        |
+|                                                                      |
+| Please report any problems to "research@unc.edu", or 919-962-HELP,   |
+| or go to https://help.rc.unc.edu for assistance or to submit a       |
+| help request.                                                        |
+|----------------------------------------------------------------------|
+
+Jupyter listening on :8888 (after 3*2s)
+[3/3] SSH tunnel: localhost:6081 → c0838:8888...
+|----------------------------------------------------------------------|
+|     Longleaf has recently been upgraded to RHEL9                     |
+|     See https://help.rc.unc.edu/longleafOSupgrade/ for details.      |
+|----------------------------------------------------------------------|
+
+
+|----------------------------------------------------------------------|
+|     The University of North Carolina at Chapel Hill                  |
+|     ***********************************************                  |
+|     Unauthorized access to this system is prohibited.                |
+|                                                                      |
+| This is a University system intended for University purposes         |
+| only. The University reserves the right to monitor the use of        |
+| this system as required to ensure its stability, availability,       |
+| and security.                                                        |
+|                                                                      |
+| Please report any problems to "research@unc.edu", or 919-962-HELP,   |
+| or go to https://help.rc.unc.edu for assistance or to submit a       |
+| help request.                                                        |
+|----------------------------------------------------------------------|
+
+DONE: JupyterLab ready at http://localhost:6081/lab?token=g407Tu5FW5MR4DbpyeFLCBtX
+
+=== Wed May 13 10:06:36 EDT 2026 === jupyter_manager.sh stop ===
+Stopping Jupyter...
+DONE: Jupyter stopped
+
+=== Wed May 13 10:07:16 EDT 2026 === jupyter_manager.sh start c0838 ===
+[1/3] Deploying Jupyter launch script to Longleaf...
+|----------------------------------------------------------------------|
+|     Longleaf has recently been upgraded to RHEL9                     |
+|     See https://help.rc.unc.edu/longleafOSupgrade/ for details.      |
+|----------------------------------------------------------------------|
+
+
+|----------------------------------------------------------------------|
+|     The University of North Carolina at Chapel Hill                  |
+|     ***********************************************                  |
+|     Unauthorized access to this system is prohibited.                |
+|                                                                      |
+| This is a University system intended for University purposes         |
+| only. The University reserves the right to monitor the use of        |
+| this system as required to ensure its stability, availability,       |
+| and security.                                                        |
+|                                                                      |
+| Please report any problems to "research@unc.edu", or 919-962-HELP,   |
+| or go to https://help.rc.unc.edu for assistance or to submit a       |
+| help request.                                                        |
+|----------------------------------------------------------------------|
+
+[2/3] Starting JupyterLab on c0838...
+|----------------------------------------------------------------------|
+|     Longleaf has recently been upgraded to RHEL9                     |
+|     See https://help.rc.unc.edu/longleafOSupgrade/ for details.      |
+|----------------------------------------------------------------------|
+
+
+|----------------------------------------------------------------------|
+|     The University of North Carolina at Chapel Hill                  |
+|     ***********************************************                  |
+|     Unauthorized access to this system is prohibited.                |
+|                                                                      |
+| This is a University system intended for University purposes         |
+| only. The University reserves the right to monitor the use of        |
+| this system as required to ensure its stability, availability,       |
+| and security.                                                        |
+|                                                                      |
+| Please report any problems to "research@unc.edu", or 919-962-HELP,   |
+| or go to https://help.rc.unc.edu for assistance or to submit a       |
+| help request.                                                        |
+|----------------------------------------------------------------------|
+
+Jupyter listening on :8888 (after 11*2s)
+[3/3] SSH tunnel: localhost:6081 → c0838:8888...
+|----------------------------------------------------------------------|
+|     Longleaf has recently been upgraded to RHEL9                     |
+|     See https://help.rc.unc.edu/longleafOSupgrade/ for details.      |
+|----------------------------------------------------------------------|
+
+
+|----------------------------------------------------------------------|
+|     The University of North Carolina at Chapel Hill                  |
+|     ***********************************************                  |
+|     Unauthorized access to this system is prohibited.                |
+|                                                                      |
+| This is a University system intended for University purposes         |
+| only. The University reserves the right to monitor the use of        |
+| this system as required to ensure its stability, availability,       |
+| and security.                                                        |
+|                                                                      |
+| Please report any problems to "research@unc.edu", or 919-962-HELP,   |
+| or go to https://help.rc.unc.edu for assistance or to submit a       |
+| help request.                                                        |
+|----------------------------------------------------------------------|
+
+DONE: JupyterLab ready at http://localhost:6081/lab?token=gcDhLdHVdFQ9OhtXbpMcm90b
+channel 2: open failed: connect failed: Connection refused
+channel 2: open failed: connect failed: Connection refused
+channel 2: open failed: connect failed: Connection refused
+channel 2: open failed: connect failed: Connection refused
+channel 2: open failed: connect failed: Connection refused
+channel 2: open failed: connect failed: Connection refused
+channel 2: open failed: connect failed: Connection refused
+channel 2: open failed: connect failed: Connection refused
+channel 2: open failed: connect failed: Connection refused
+channel 2: open failed: connect failed: Connection refused
+channel 2: open failed: connect failed: Connection refused
+channel 2: open failed: connect failed: Connection refused
+channel 2: open failed: connect failed: Connection refused
+channel 2: open failed: connect failed: Connection refused
+channel 2: open failed: connect failed: Connection refused
+channel 2: open failed: connect failed: Connection refused
+channel 2: open failed: connect failed: Connection refused
+channel 2: open failed: connect failed: Connection refused
+channel 2: open failed: connect failed: Connection refused
+channel 2: open failed: connect failed: Connection refused
+channel 2: open failed: connect failed: Connection refused
+channel 2: open failed: connect failed: Connection refused
+channel 2: open failed: connect failed: Connection refused
+channel 2: open failed: connect failed: Connection refused
+channel 2: open failed: connect failed: Connection refused
+channel 2: open failed: connect failed: Connection refused
+channel 2: open failed: connect failed: Connection refused
+channel 2: open failed: connect failed: Connection refused
+channel 2: open failed: connect failed: Connection refused
+channel 2: open failed: connect failed: Connection refused
+channel 2: open failed: connect failed: Connection refused
+channel 2: open failed: connect failed: Connection refused
+channel 2: open failed: connect failed: Connection refused
+channel 2: open failed: connect failed: Connection refused
+channel 2: open failed: connect failed: Connection refused
+channel 2: open failed: connect failed: Connection refused
+channel 2: open failed: connect failed: Connection refused
+channel 2: open failed: connect failed: Connection refused
+channel 2: open failed: connect failed: Connection refused
+channel 2: open failed: connect failed: Connection refused
+channel 2: open failed: connect failed: Connection refused
+channel 2: open failed: connect failed: Connection refused
+channel 2: open failed: connect failed: Connection refused
+channel 2: open failed: connect failed: Connection refused
+channel 2: open failed: connect failed: Connection refused
+channel 2: open failed: connect failed: Connection refused
+channel 2: open failed: connect failed: Connection refused
+channel 2: open failed: connect failed: Connection refused
+channel 2: open failed: connect failed: Connection refused
+channel 2: open failed: connect failed: Connection refused
+channel 2: open failed: connect failed: Connection refused
+channel 2: open failed: connect failed: Connection refused
+channel 2: open failed: connect failed: Connection refused
+channel 2: open failed: connect failed: Connection refused
+channel 2: open failed: connect failed: Connection refused
+channel 2: open failed: connect failed: Connection refused
+channel 2: open failed: connect failed: Connection refused
+channel 2: open failed: connect failed: Connection refused
+channel 2: open failed: connect failed: Connection refused
+channel 2: open failed: connect failed: Connection refused
+channel 2: open failed: connect failed: Connection refused
+channel 2: open failed: connect failed: Connection refused
+channel 2: open failed: connect failed: Connection refused
+channel 2: open failed: connect failed: Connection refused
+channel 2: open failed: connect failed: Connection refused
+channel 2: open failed: connect failed: Connection refused
+channel 2: open failed: connect failed: Connection refused
+channel 2: open failed: connect failed: Connection refused
+channel 2: open failed: connect failed: Connection refused
+channel 2: open failed: connect failed: Connection refused
+channel 2: open failed: connect failed: Connection refused
+channel 2: open failed: connect failed: Connection refused
+channel 2: open failed: connect failed: Connection refused
+channel 2: open failed: connect failed: Connection refused
+channel 2: open failed: connect failed: Connection refused
+channel 2: open failed: connect failed: Connection refused
+channel 2: open failed: connect failed: Connection refused
+channel 2: open failed: connect failed: Connection refused
+channel 2: open failed: connect failed: Connection refused
+channel 2: open failed: connect failed: Connection refused
+channel 2: open failed: connect failed: Connection refused
+channel 2: open failed: connect failed: Connection refused
+channel 2: open failed: connect failed: Connection refused
+channel 2: open failed: connect failed: Connection refused
+channel 2: open failed: connect failed: Connection refused
+channel 2: open failed: connect failed: Connection refused
+channel 2: open failed: connect failed: Connection refused
+channel 2: open failed: connect failed: Connection refused
+channel 2: open failed: connect failed: Connection refused
+channel 2: open failed: connect failed: Connection refused
+channel 2: open failed: connect failed: Connection refused
+channel 2: open failed: connect failed: Connection refused
+channel 2: open failed: connect failed: Connection refused
+channel 2: open failed: connect failed: Connection refused
+channel 2: open failed: connect failed: Connection refused
+channel 2: open failed: connect failed: Connection refused
+channel 2: open failed: connect failed: Connection refused
+channel 2: open failed: connect failed: Connection refused
+channel 2: open failed: connect failed: Connection refused
+channel 2: open failed: connect failed: Connection refused
+channel 2: open failed: connect failed: Connection refused
+channel 2: open failed: connect failed: Connection refused
+channel 2: open failed: connect failed: Connection refused
+channel 2: open failed: connect failed: Connection refused
+channel 2: open failed: connect failed: Connection refused
+channel 2: open failed: connect failed: Connection refused
+
+=== Sat May 16 09:13:08 EDT 2026 === jupyter_manager.sh stop ===
+Stopping Jupyter...
+DONE: Jupyter stopped
+
+=== Sat May 16 09:13:18 EDT 2026 === jupyter_manager.sh start c130405 ===
+[1/3] Deploying Jupyter launch script to Longleaf...
+|----------------------------------------------------------------------|
+|     Longleaf has recently been upgraded to RHEL9                     |
+|     See https://help.rc.unc.edu/longleafOSupgrade/ for details.      |
+|----------------------------------------------------------------------|
+
+
+|----------------------------------------------------------------------|
+|     The University of North Carolina at Chapel Hill                  |
+|     ***********************************************                  |
+|     Unauthorized access to this system is prohibited.                |
+|                                                                      |
+| This is a University system intended for University purposes         |
+| only. The University reserves the right to monitor the use of        |
+| this system as required to ensure its stability, availability,       |
+| and security.                                                        |
+|                                                                      |
+| Please report any problems to "research@unc.edu", or 919-962-HELP,   |
+| or go to https://help.rc.unc.edu for assistance or to submit a       |
+| help request.                                                        |
+|----------------------------------------------------------------------|
+
+[2/3] Starting JupyterLab on c130405...
+|----------------------------------------------------------------------|
+|     Longleaf has recently been upgraded to RHEL9                     |
+|     See https://help.rc.unc.edu/longleafOSupgrade/ for details.      |
+|----------------------------------------------------------------------|
+
+
+|----------------------------------------------------------------------|
+|     The University of North Carolina at Chapel Hill                  |
+|     ***********************************************                  |
+|     Unauthorized access to this system is prohibited.                |
+|                                                                      |
+| This is a University system intended for University purposes         |
+| only. The University reserves the right to monitor the use of        |
+| this system as required to ensure its stability, availability,       |
+| and security.                                                        |
+|                                                                      |
+| Please report any problems to "research@unc.edu", or 919-962-HELP,   |
+| or go to https://help.rc.unc.edu for assistance or to submit a       |
+| help request.                                                        |
+|----------------------------------------------------------------------|
+
+Jupyter listening on :8888 (after 4*2s)
+[3/3] SSH tunnel: localhost:6081 → c130405:8888...
+|----------------------------------------------------------------------|
+|     Longleaf has recently been upgraded to RHEL9                     |
+|     See https://help.rc.unc.edu/longleafOSupgrade/ for details.      |
+|----------------------------------------------------------------------|
+
+
+|----------------------------------------------------------------------|
+|     The University of North Carolina at Chapel Hill                  |
+|     ***********************************************                  |
+|     Unauthorized access to this system is prohibited.                |
+|                                                                      |
+| This is a University system intended for University purposes         |
+| only. The University reserves the right to monitor the use of        |
+| this system as required to ensure its stability, availability,       |
+| and security.                                                        |
+|                                                                      |
+| Please report any problems to "research@unc.edu", or 919-962-HELP,   |
+| or go to https://help.rc.unc.edu for assistance or to submit a       |
+| help request.                                                        |
+|----------------------------------------------------------------------|
+
+DONE: JupyterLab ready at http://localhost:6081/lab?token=AMBXjiS5eIC3HdytSwG0g2m0

@@ -512,6 +512,9 @@
       <button class="tab-btn active" onclick="switchTab('niivue')">3D Viewer (NiiVue)</button>
       <button class="tab-btn" onclick="switchTab('civet')">CIVET QC Report</button>
       <button class="tab-btn" onclick="switchTab('slicer')">Remote VNC</button>
+      <button class="tab-btn" onclick="switchTab('papaya')">Papaya</button>
+      <button class="tab-btn" onclick="switchTab('jupyter')">Jupyter (Nilearn / PyVista)</button>
+      <button class="tab-btn" onclick="switchTab('neuromarvl')">NeuroMArVL</button>
     </div>
   </header>
 
@@ -778,6 +781,14 @@
           <option value="fsleyes">FSLeyes (FSL 6.0.7)</option>
           <option value="freeview">Freeview (FreeSurfer 8.2.0)</option>
           <option value="itksnap">ITK-SNAP 4.2.2</option>
+          <option value="wbview">Connectome Workbench (wb_view)</option>
+          <option value="paraview">ParaView 5.13</option>
+          <option value="afni">AFNI 25.1.10</option>
+          <option value="mricron">MRIcron</option>
+          <option value="mricrogl">MRIcroGL</option>
+          <option value="surfice">Surf Ice</option>
+          <option value="blender">Blender 4.2</option>
+          <option value="brainnet">BrainNet Viewer (MATLAB)</option>
           <option value="desktop">Longleaf Desktop</option>
         </select>
         <button class="nv-btn primary" id="vncConnectBtn" onclick="connectVNC()">Connect</button>
@@ -819,6 +830,65 @@
     </div>
   </div>
 
+  <!-- ═══════════ Papaya Tab ═══════════ -->
+  <div id="papaya-tab" class="tab-content">
+    <div style="padding:20px;">
+      <div style="margin-bottom:12px;color:#8b949e;font-size:0.85rem;">
+        Papaya — JavaScript-based DICOM/NIfTI viewer with multi-image support, atlas overlays, and 3D rendering. Drag and drop NIfTI/DICOM files into the viewer below.
+      </div>
+      <iframe src="papaya/standard/index.html"
+              style="width:100%;height:calc(100vh - 180px);border:1px solid #30363d;border-radius:6px;background:#000;"
+              id="papayaFrame"></iframe>
+    </div>
+  </div>
+
+  <!-- ═══════════ Jupyter Tab ═══════════ -->
+  <div id="jupyter-tab" class="tab-content">
+    <div style="padding:14px;">
+      <div style="display:flex;gap:10px;align-items:center;margin-bottom:10px;">
+        <button class="nv-btn primary" id="jupyterConnectBtn" onclick="connectJupyter()">Start JupyterLab</button>
+        <button class="nv-btn" onclick="stopJupyter()">Stop</button>
+        <span id="jupyterStatus" style="color:#8b949e;font-size:0.85rem;">Not started</span>
+      </div>
+      <div style="margin-bottom:10px;color:#8b949e;font-size:0.85rem;">
+        Jupyter environment includes <strong>nilearn</strong>, <strong>pyvista</strong>, <strong>nibabel</strong>, <strong>matplotlib</strong>, <strong>trame</strong>. Uses the same SLURM job as Remote VNC; click "Start JupyterLab" to launch on the compute node.
+      </div>
+      <iframe id="jupyterFrame" style="width:100%;height:calc(100vh - 200px);border:1px solid #30363d;border-radius:6px;background:#fff;display:none;"></iframe>
+      <div id="jupyterPlaceholder" style="width:100%;height:calc(100vh - 200px);border:1px dashed #30363d;border-radius:6px;background:#0d1117;display:flex;align-items:center;justify-content:center;color:#8b949e;">
+        Click "Start JupyterLab" above. Requires an active SLURM job (use Remote VNC tab to request one if needed).
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ NeuroMArVL Tab ═══════════ -->
+  <div id="neuromarvl-tab" class="tab-content">
+    <div style="padding:20px;">
+      <div style="margin-bottom:16px;padding:14px;background:#161b22;border:1px solid #30363d;border-radius:6px;">
+        <h3 style="margin-bottom:8px;">NeuroMArVL — Brain Network Visualization</h3>
+        <p style="color:#8b949e;font-size:0.85rem;line-height:1.6;margin-bottom:12px;">
+          Web-based connectome viewer for visualizing brain networks (nodes + edges) on 3D brain surfaces. Hosted by Monash University.
+        </p>
+        <p style="color:#e3b341;font-size:0.8rem;margin-bottom:12px;">
+          ⚠ Note: The Monash server's SSL certificate has expired — your browser may show a security warning. Click "Advanced" → "Proceed to site" to access it.
+        </p>
+        <a href="https://immersive.erc.monash.edu/neuromarvl/" target="_blank" rel="noopener"
+           style="display:inline-block;padding:10px 20px;background:#1f6feb;color:#fff;border-radius:6px;text-decoration:none;font-weight:500;">
+          Open NeuroMArVL in New Tab →
+        </a>
+      </div>
+      <div style="margin-top:12px;padding:14px;background:#0d1117;border:1px solid #30363d;border-radius:6px;font-size:0.85rem;color:#8b949e;line-height:1.7;">
+        <strong style="color:#e6edf3;">What NeuroMArVL does:</strong>
+        <ul style="padding-left:20px;margin-top:8px;">
+          <li>Load brain network data (adjacency matrices, node coordinates, edge weights)</li>
+          <li>Visualize connectomes on standard brain templates (MNI, fsaverage)</li>
+          <li>Interactive node/edge filtering by weight, region, hemisphere</li>
+          <li>Export figures for publications</li>
+          <li>Supports common formats: CSV, JSON, FreeSurfer aparc</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
   <!-- Lightbox -->
   <div class="lightbox" id="lightbox" onclick="closeLightbox()">
     <button class="lightbox-close" onclick="closeLightbox()">&times;</button>
@@ -839,7 +909,10 @@
       for (var i = 0; i < btns.length; i++) {
         if (btns[i].textContent.toLowerCase().indexOf(name) !== -1 ||
             (name === 'civet' && btns[i].textContent.indexOf('CIVET') !== -1) ||
-            (name === 'slicer' && btns[i].textContent.indexOf('VNC') !== -1)) {
+            (name === 'slicer' && btns[i].textContent.indexOf('VNC') !== -1) ||
+            (name === 'papaya' && btns[i].textContent.indexOf('Papaya') !== -1) ||
+            (name === 'jupyter' && btns[i].textContent.indexOf('Jupyter') !== -1) ||
+            (name === 'neuromarvl' && btns[i].textContent.indexOf('NeuroMArVL') !== -1)) {
           btns[i].classList.add('active');
         }
       }
@@ -1641,11 +1714,11 @@
       connectBtn.textContent = 'Setting up...';
 
       try {
-        // Step 1: Check if a VNC session already exists
-        status.textContent = 'Checking VNC session...';
+        // Step 1: Full health check (verifies SLURM job + remote VNC, not just local websockify)
+        status.textContent = 'Verifying VNC session (this may take 10-15s)...';
         status.style.color = '#e3b341';
 
-        var stateResp = await fetch('/api/vnc/state');
+        var stateResp = await fetch('/api/vnc/state?verify=1');
         if (stateResp.ok) {
           var state = await stateResp.json();
           computeNode = state.compute_node;
@@ -1692,7 +1765,7 @@
             var submitResp = await fetch('/api/slurm/start', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ partition: 'general', mem: '8g', time: '4:00:00' })
+              body: JSON.stringify({ partition: 'general', mem: '8g', time: '12:00:00' })
             });
             var submitResult = await submitResp.json();
             if (submitResult.error) throw new Error('Job submit failed: ' + submitResult.error);
@@ -1711,28 +1784,51 @@
             }
           }
 
-          computeNode = jobs[0].node;
-          status.textContent = 'Got node ' + computeNode + '. Starting ' + appLabel + '... (15-30s)';
+          // Try up to 3 times — auto-retry if a bad SLURM node is allocated
+          var startResult = null;
+          for (var startAttempt = 0; startAttempt < 3; startAttempt++) {
+            computeNode = jobs[0].node;
+            status.textContent = 'Got node ' + computeNode + '. Starting ' + appLabel + '...';
 
-          // Start full VNC session
-          var startResp = await fetch('/api/vnc/start', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ compute_node: computeNode, app: selectedApp })
-          });
-          if (!startResp.ok) {
+            var startResp = await fetch('/api/vnc/start', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ compute_node: computeNode, app: selectedApp })
+            });
+            if (startResp.ok) {
+              startResult = await startResp.json();
+              break;
+            }
             var err = await startResp.json();
+            if (err.retry && startAttempt < 2) {
+              // Bad node — server cancelled the job, request a new one
+              status.textContent = 'Node ' + computeNode + ' unreachable. Requesting a new node... (attempt ' + (startAttempt + 2) + '/3)';
+              var resubmit = await fetch('/api/slurm/start', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ partition: 'general', mem: '8g', time: '12:00:00' })
+              });
+              if (!resubmit.ok) throw new Error('Could not resubmit job');
+              for (var p = 0; p < 18; p++) {
+                await new Promise(function(r) { setTimeout(r, 5000); });
+                var pr = await fetch('/api/slurm/jobs');
+                jobs = await pr.json();
+                if (jobs.length > 0) break;
+              }
+              if (jobs.length === 0) throw new Error('Resubmit allocation timed out');
+              continue;
+            }
             throw new Error('VNC start failed: ' + (err.error || 'unknown'));
           }
-          var startResult = await startResp.json();
+          if (!startResult) throw new Error('VNC start failed after 3 attempts. The cluster may be having issues.');
           vncCurrentApp = selectedApp;
           if (startResult.state) wsPort = startResult.state.websocket_port || 6080;
           status.textContent = 'VNC ready — connecting...';
           await new Promise(function(r) { setTimeout(r, 3000); });
         }
 
-        // Step 2: Connect noVNC iframe
-        var url = 'novnc/vnc_lite.html?host=' + host + '&port=' + wsPort +
+        // Step 2: Connect noVNC iframe — use page port (Tornado proxies /websockify → 6080)
+        var pagePort = window.location.port || '8080';
+        var url = 'novnc/vnc_lite.html?host=' + host + '&port=' + pagePort + '&path=websockify' +
                   '&autoconnect=true&resize=remote&show_dot=true&password=' + encodeURIComponent(password);
         frame.src = url;
         frame.style.display = 'block';
@@ -1755,6 +1851,80 @@
       } finally {
         connectBtn.disabled = false;
         connectBtn.textContent = 'Connect';
+      }
+    }
+
+    /* ── Jupyter ── */
+    async function connectJupyter() {
+      var status = document.getElementById('jupyterStatus');
+      var frame = document.getElementById('jupyterFrame');
+      var placeholder = document.getElementById('jupyterPlaceholder');
+      var btn = document.getElementById('jupyterConnectBtn');
+      btn.disabled = true;
+      btn.textContent = 'Starting...';
+      try {
+        // Check if already running
+        var stateResp = await fetch('/api/jupyter/state');
+        if (stateResp.ok) {
+          var st = await stateResp.json();
+          var url = '/jlab/lab?token=' + st.token;
+          frame.src = url;
+          frame.style.display = 'block';
+          placeholder.style.display = 'none';
+          status.textContent = 'Connected on ' + st.compute_node;
+          status.style.color = '#3fb950';
+          return;
+        }
+        // Need a SLURM job — reuse VNC's if active, else error
+        status.textContent = 'Finding compute node...';
+        status.style.color = '#e3b341';
+        var jobsResp = await fetch('/api/slurm/jobs');
+        var jobs = await jobsResp.json();
+        if (jobs.length === 0) {
+          throw new Error('No SLURM job. Go to Remote VNC tab and click Connect first to request a compute node.');
+        }
+        var node = jobs[0].node;
+        status.textContent = 'Starting JupyterLab on ' + node + ' (this may take 30-60s)...';
+        var startResp = await fetch('/api/jupyter/start', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ compute_node: node })
+        });
+        if (!startResp.ok) {
+          var err = await startResp.json();
+          throw new Error('Start failed: ' + (err.error || 'unknown'));
+        }
+        var result = await startResp.json();
+        var st = result.state;
+        var url = '/jlab/lab?token=' + st.token;
+        // Wait a couple seconds for tunnel to be ready
+        await new Promise(function(r) { setTimeout(r, 2000); });
+        frame.src = url;
+        frame.style.display = 'block';
+        placeholder.style.display = 'none';
+        status.textContent = 'Connected on ' + node;
+        status.style.color = '#3fb950';
+      } catch (e) {
+        status.textContent = e.message;
+        status.style.color = '#f85149';
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Start JupyterLab';
+      }
+    }
+
+    async function stopJupyter() {
+      var status = document.getElementById('jupyterStatus');
+      var frame = document.getElementById('jupyterFrame');
+      var placeholder = document.getElementById('jupyterPlaceholder');
+      frame.src = '';
+      frame.style.display = 'none';
+      placeholder.style.display = 'flex';
+      try {
+        await fetch('/api/jupyter/stop', { method: 'POST' });
+        status.textContent = 'Stopped';
+        status.style.color = '#8b949e';
+      } catch (e) {
+        status.textContent = 'Stop error: ' + e.message;
       }
     }
 
